@@ -73,8 +73,8 @@ bool LiveHostMgr::processDhcp(GPacket* ethPacket) {
 	gbyte* end = ethPacket->buf_.data_ + ethPacket->buf_.size_;
 	GDhcpHdr::Option* option = dhcpHdr->first();
 
-	GIp ip(0);
-	QString hostName{""};
+	GIp ip = 0;
+	QString hostName = "";
 	while (true) {
 		if (option->type_ == GDhcpHdr::RequestedIpAddress) {
 			ip = ntohl(*PIp(option->value()));
@@ -138,6 +138,7 @@ void LiveHostMgr::captured(GPacket* packet) {
 		case GEthHdr::Ip4: {
 			GIpHdr* ipHdr = ethPacket->ipHdr_;
 			GIp sip = myIntf_->getAdjIp(ipHdr->sip());
+			if (sip == 0) return;
 			{
 				QMutexLocker locker(&hosts_.m_);
 				Host* host = hosts_.find(smac);
