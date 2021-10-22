@@ -28,9 +28,9 @@ bool LiveHostMgr::doOpen() {
 		SET_ERR(GErr::FAIL, "device_.open() return false");
 		return false;
 	}
-	myIntf_ = device_.intf();
-	Q_ASSERT(myIntf_ != nullptr);
-	myMac_ = myIntf_->mac();
+	GIntf* intf = device_.intf();
+	Q_ASSERT(intf != nullptr);
+	myMac_ = intf->mac();
 	qDebug() << "myMac =" << QString(myMac_);
 
 	return true;
@@ -56,7 +56,6 @@ bool LiveHostMgr::processDhcp(GPacket* ethPacket) {
 	if (dhcpHdr->yourIp() != 0) { // DHCP Offer of DHCP ACK sent from server
 		GMac mac = dhcpHdr->clientMac();
 		GIp ip = dhcpHdr->yourIp();
-
 		{
 			QMutexLocker locker(&hosts_.m_);
 			newHost = hosts_.find(mac);
@@ -64,7 +63,7 @@ bool LiveHostMgr::processDhcp(GPacket* ethPacket) {
 				newHost = hosts_.add(Host(mac, ip));
 		}
 		qDebug() << "yourIp";
-		emit hostAdded(newHost);
+		emit hostDetected(newHost);
 		return true;
 	}
 
@@ -105,7 +104,7 @@ bool LiveHostMgr::processDhcp(GPacket* ethPacket) {
 				newHost->name_ = host.name_;
 		}
 		qDebug() << "emit RequestedIpAddress";
-		emit hostAdded(newHost);
+		emit hostDetected(newHost);
 	}
 	return false;
 }
@@ -120,47 +119,31 @@ void LiveHostMgr::captured(GPacket* packet) {
 	if (processDhcp(ethPacket)) return;
 
 	Host* newHost = nullptr;
-	switch (ethHdr->type()) {
-		case GEthHdr::Arp: {
-			GArpHdr* arpHdr = ethPacket->arpHdr_;
-			GIp sip = arpHdr->sip();
-			{
-				QMutexLocker locker(&hosts_.m_);
-				Host* host = hosts_.find(smac);
-				if (host == nullptr) {
-					Host host(smac, sip);
-					newHost = hosts_.add(host);
-					qDebug() << "emit Arp";
-				}
+	if (ethHdr->type() == GEthHdr::Arp) {
+		GArpHdr* arpHdr = ethPacket->arpHdr_;
+		GIp sip = arpHdr->sip();
+		{
+			QMutexLocker locker(&hosts_.m_);
+			Host* host = hosts_.find(smac);
+			if (host == nullptr) {
+				Host host(smac, sip);
+				newHost = hosts_.add(host);
+				qDebug() << "emit Arp";
 			}
-			break;
 		}
-		case GEthHdr::Ip4: {
-			GIpHdr* ipHdr = ethPacket->ipHdr_;
-			GIp sip = myIntf_->getAdjIp(ipHdr->sip());
-			if (sip == 0) return;
-			{
-				QMutexLocker locker(&hosts_.m_);
-				Host* host = hosts_.find(smac);
-				if (host == nullptr) {
-					Host host(smac, sip);
-					newHost = hosts_.add(host);
-					qDebug() << "emit Ip";
-				}
-			}
-			break;
-		}
-		default:
-			break;
 	}
 	if (newHost != nullptr)
-		emit hostAdded(newHost);
+		emit hostDetected(newHost);
 }
 
 void LiveHostMgr::propLoad(QJsonObject jo) {
-	device_.propLoad(jo);
+	GStateObj::propLoad(jo);
+	jo["device"] >> device_;
+	jo["fullScan"] >> fs_;
 }
 
 void LiveHostMgr::propSave(QJsonObject& jo) {
-	device_.propSave(jo);
+	GStateObj::propSave(jo);
+	jo["device"] <<  device_;
+	jo["fullScan"] << fs_;
 }

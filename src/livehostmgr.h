@@ -3,10 +3,12 @@
 #include <QMutexLocker>
 #include <QMutex>
 #include <QVector>
+#include <GJson>
 #include <GPcapDevice>
 #include <GStateObj>
 #include <GDhcpHdr>
 #include "host.h"
+#include "fullscan.h"
 
 struct HostVector : protected QVector<Host> {
 public:
@@ -19,9 +21,6 @@ public:
 
 struct G_EXPORT LiveHostMgr : GStateObj {
 	Q_OBJECT
-	Q_PROPERTY(int fullScanSleepTime MEMBER fullScanSleepTime_)
-
-	int fullScanSleepTime_{60000}; // 10 minutes
 
 public:
 	LiveHostMgr(QObject* parent = nullptr);
@@ -34,8 +33,9 @@ protected:
 public:
 	HostVector hosts_;
 	GPcapDevice device_;
-	GIntf* myIntf_{nullptr};
 	GMac myMac_{GMac::nullMac()};
+
+	FullScan fs_;
 
 protected:
 	bool processDhcp(GPacket* ethPacket);
@@ -44,7 +44,7 @@ public slots:
 	void captured(GPacket* packet);
 
 signals:
-	void hostAdded(Host* host);
+	void hostDetected(Host* host);
 	void hostDeleted(Host* host);
 
 public:

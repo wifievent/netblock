@@ -13,8 +13,8 @@ int main(int argc, char *argv[]) {
 	GJson::saveToFile(jo);
 
 	Obj obj;
-	QObject::connect(&lhm, &LiveHostMgr::hostAdded, &obj, &Obj::processhostAdded, Qt::BlockingQueuedConnection);
-	QObject::connect(&lhm, &LiveHostMgr::hostDeleted, &obj, &Obj::processhostDeleted, Qt::BlockingQueuedConnection);
+	QObject::connect(&lhm, &LiveHostMgr::hostDetected, &obj, &Obj::processHostDetected, Qt::BlockingQueuedConnection);
+	QObject::connect(&lhm, &LiveHostMgr::hostDeleted, &obj, &Obj::processHostDeleted, Qt::BlockingQueuedConnection);
 
 	if (!lhm.open()) {
 		qWarning() << QString("lhm.open() return false %1").arg(lhm.err->msg());

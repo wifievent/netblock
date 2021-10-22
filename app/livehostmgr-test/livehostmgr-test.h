@@ -12,11 +12,11 @@ public:
 	~Obj() override {}
 
 public slots:
-	void processhostAdded(Host* host) {
-		qDebug() << QString("host added %1 %2 %3").arg(QString(host->mac_), QString(host->ip_), QString(host->name_));
+	void processHostDetected(Host* host) {
+		qDebug() << QString("host detected %1 %2 %3").arg(QString(host->mac_), QString(host->ip_), QString(host->name_));
 	}
 
-	void processhostDeleted(Host* host) {
+	void processHostDeleted(Host* host) {
 		qDebug() << QString("host deleted %1 %2 %3").arg(QString(host->mac_), QString(host->ip_), QString(host->name_));
 	}
 };
