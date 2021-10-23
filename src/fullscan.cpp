@@ -20,7 +20,9 @@ bool FullScan::doOpen() {
 
 bool FullScan::doClose() {
 	we_.wakeAll();
-	thread_.wait();
+	if (!thread_.wait() ) {
+		qCritical() << "thread_.wait return false";
+	}
 	return true;
 }
 

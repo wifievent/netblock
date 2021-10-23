@@ -25,8 +25,8 @@ protected:
 protected:
 	void run();
 
-	struct MyThread: QThread {
-		MyThread(QObject *parent) : QThread(parent) {}
+	struct MyThread: GThread {
+		MyThread(QObject *parent) : GThread(parent) {}
 		~MyThread() {}
 		void run() override {
 			FullScan* fullScan = dynamic_cast<FullScan*>(parent());
