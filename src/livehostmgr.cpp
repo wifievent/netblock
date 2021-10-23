@@ -33,12 +33,17 @@ bool LiveHostMgr::doOpen() {
 	myMac_ = intf->mac();
 	qDebug() << "myMac =" << QString(myMac_);
 
+	fs_.device_ = &device_;
+	if (!fs_.open())
+		return false;
+
 	return true;
 }
 
 bool LiveHostMgr::doClose() {
-	bool res = device_.close();
-	return res;
+	fs_.close();
+	device_.close();
+	return true;
 }
 
 bool LiveHostMgr::processDhcp(GPacket* ethPacket) {
