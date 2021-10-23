@@ -11,6 +11,7 @@ SOURCES += \
 	../../src/fullscan.cpp \
 	../../src/host.cpp \
 	../../src/livehostmgr.cpp \
+	../../src/oldhostmgr.cpp \
 	livehostmgr-test.cpp
 
 HEADERS += \
@@ -18,4 +19,5 @@ HEADERS += \
 	../../src/fullscan.h \
 	../../src/host.h \
 	../../src/livehostmgr.h \
+	../../src/oldhostmgr.h \
 	livehostmgr-test.h

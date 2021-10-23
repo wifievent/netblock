@@ -2,22 +2,13 @@
 
 #include <QMutexLocker>
 #include <QMutex>
-#include <QVector>
 #include <GJson>
 #include <GPcapDevice>
 #include <GStateObj>
 #include <GDhcpHdr>
 #include "host.h"
 #include "fullscan.h"
-
-struct HostVector : protected QVector<Host> {
-public:
-	QMutex m_;
-
-	void clear() { QVector<Host>::clear(); }
-	Host* find(GMac mac);
-	Host* add(Host host);
-};
+#include "oldhostmgr.h"
 
 struct G_EXPORT LiveHostMgr : GStateObj {
 	Q_OBJECT
@@ -31,11 +22,13 @@ protected:
 	bool doClose() override;
 
 public:
-	HostVector hosts_;
+	HostMap hosts_;
 	GPcapDevice device_;
-	GMac myMac_{GMac::nullMac()};
-
 	FullScan fs_;
+	OldHostMgr ohm_;
+	QElapsedTimer et_;
+
+	GMac myMac_{GMac::nullMac()};
 
 protected:
 	bool processDhcp(GPacket* ethPacket);

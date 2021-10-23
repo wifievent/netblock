@@ -8,8 +8,8 @@ int main(int argc, char *argv[]) {
 
 	LiveHostMgr lhm;
 	QJsonObject jo = GJson::loadFromFile();
-	jo["lhm"] >> lhm;
-	jo["lhm"] << lhm;
+	jo["LiveHostMgr"] >> lhm;
+	jo["LiveHostMgr"] << lhm;
 	GJson::saveToFile(jo);
 
 	Obj obj;

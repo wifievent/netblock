@@ -15,14 +15,17 @@ bool FullScan::doOpen() {
 	}
 
 	thread_.start();
+
 	return true;
 }
 
 bool FullScan::doClose() {
 	we_.wakeAll();
+
 	if (!thread_.wait() ) {
 		qCritical() << "thread_.wait return false";
 	}
+
 	return true;
 }
 
@@ -39,14 +42,14 @@ void FullScan::run() {
 	GIp endIp = (myIp | ~intf->mask());
 	qDebug() << QString("begIp=%1 endIp=%2").arg(QString(begIp), QString(endIp));
 
-	EthArpPacket arpPacket;
+	EthArpPacket packet;
 
-	GEthHdr* ethHdr = &arpPacket.ethHdr_;
+	GEthHdr* ethHdr = &packet.ethHdr_;
 	ethHdr->dmac_ = GMac::broadcastMac();
 	ethHdr->smac_ = myMac;
 	ethHdr->type_ = htons(GEthHdr::Arp);
 
-	GArpHdr* arpHdr = &arpPacket.arpHdr_;
+	GArpHdr* arpHdr = &packet.arpHdr_;
 	arpHdr->hrd_ = htons(GArpHdr::ETHER);
 	arpHdr->pro_ = htons(GEthHdr::Ip4);
 	arpHdr->hln_ = GMac::SIZE;
@@ -60,7 +63,7 @@ void FullScan::run() {
 	while (active()) {
 		for (GIp ip = begIp; ip <= endIp; ip = ip + 1) {
 			arpHdr->tip_ = htonl(ip);
-			GPacket::Result res = device_->write(GBuf(pbyte(&arpPacket), sizeof(arpPacket)));
+			GPacket::Result res = device_->write(GBuf(pbyte(&packet), sizeof(packet)));
 			if (res != GPacket::Ok) {
 				qWarning() << QString("device_->write return %1 %2").arg(int(res)).arg(device_->err->msg());
 			}

@@ -8,7 +8,7 @@ struct G_EXPORT FullScan : GStateObj {
 	Q_PROPERTY(int sendSleepTime MEMBER sendSleepTime_)
 	Q_PROPERTY(int rescanSleepTime MEMBER rescanSleepTime_)
 
-	int sendSleepTime_{50}; // 50 msec
+	int sendSleepTime_{50}; // 50 msecs
 	int rescanSleepTime_{60000}; // 10 minutes
 
 public:
