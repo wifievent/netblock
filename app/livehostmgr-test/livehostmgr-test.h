@@ -13,10 +13,10 @@ public:
 
 public slots:
 	void processHostDetected(Host* host) {
-		qDebug() << QString("host detected %1 %2 %3").arg(QString(host->mac_), QString(host->ip_), QString(host->name_));
+		qDebug() << QString("host detected %1 %2 %3 %4").arg(QString(host->mac_), QString(host->ip_), host->dhcpName_, host->nickName_);
 	}
 
 	void processHostDeleted(Host* host) {
-		qDebug() << QString("host deleted %1 %2 %3").arg(QString(host->mac_), QString(host->ip_), QString(host->name_));
+		qDebug() << QString("host deleted %1 %2 %3 %4").arg(QString(host->mac_), QString(host->ip_), host->dhcpName_, host->nickName_);
 	}
 };

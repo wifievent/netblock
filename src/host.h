@@ -7,11 +7,12 @@
 struct Host {
 	Host();
 	Host(GMac mac, GIp ip);
-	Host(GMac mac, GIp ip, QString name);
+	Host(GMac mac, GIp ip, QString dhcpName);
 
 	GMac mac_;
 	GIp ip_;
-	QString name_;
+	QString dhcpName_;
+	QString nickName_;
 	qint64 lastAccess_;
 
 	static QElapsedTimer& timer() { // singleton

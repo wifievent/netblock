@@ -101,7 +101,7 @@ bool LiveHostMgr::processDhcp(GPacket* ethPacket) {
 			if (newHost == nullptr)
 				newHost = hosts_.add(host);
 			else
-				newHost->name_ = host.name_;
+				newHost->dhcpName_ = hostName;
 		}
 		qDebug() << "emit RequestedIpAddress";
 		emit hostDetected(newHost);
