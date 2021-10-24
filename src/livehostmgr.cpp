@@ -130,6 +130,7 @@ void LiveHostMgr::captured(GPacket* packet) {
 				newHost = hosts_.insert(smac, host);
 				qDebug() << "emit Arp";
 			} else {
+				qDebug() << et_.elapsed(); // gilgil temp 2021.10.24
 				it.value().lastAccess_ = et_.elapsed();
 			}
 		}

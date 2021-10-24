@@ -9,7 +9,7 @@
 
 struct OldHostMgr;
 struct ActiveScanThread : GThread {
-	ActiveScanThread(QObject* owner, Host* host);
+	ActiveScanThread(OldHostMgr* ohm, Host* host);
 	~ActiveScanThread() override;
 	void run() override;
 
