@@ -99,7 +99,7 @@ bool LiveHostMgr::processDhcp(GPacket* ethPacket) {
 			if (newHost == hosts_.end())
 				newHost = hosts_.insert(mac, host);
 			else
-				newHost->dhcpName_ = hostName;
+				newHost->hostName_ = hostName;
 			newHost.value().lastAccess_ = et_.elapsed();
 		}
 		qDebug() << "emit RequestedIpAddress";
