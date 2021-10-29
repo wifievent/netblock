@@ -140,15 +140,15 @@ void LiveHostMgr::captured(GPacket* packet) {
 }
 
 void LiveHostMgr::propLoad(QJsonObject jo) {
-	GStateObj::propLoad(jo);
-	jo["PcapDevice"] >> device_;
-	jo["FullScan"] >> fs_;
-	jo["OldHostMgr"] >> ohm_;
+    GStateObj::propLoad(jo);
+    jo["PcapDevice"] >> device_;
+    jo["FullScan"] >> fs_;
+    jo["OldHostMgr"] >> ohm_;
 }
 
 void LiveHostMgr::propSave(QJsonObject& jo) {
-	GStateObj::propSave(jo);
-	jo["PcapDevice"] <<  device_;
-	jo["FullScan"] << fs_;
-	jo["OldHostMgr"] << ohm_;
+    GStateObj::propSave(jo);
+    jo["PcapDevice"] <<  device_;
+    jo["FullScan"] << fs_;
+    jo["OldHostMgr"] << ohm_;
 }

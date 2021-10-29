@@ -23,11 +23,6 @@ void NetBlock::dbCheck() {
 }
 
 bool NetBlock::doOpen() {
-    QJsonObject jo = GJson::loadFromFile();
-	jo["LiveHostMgr"] >> lhm_;
-	jo["LiveHostMgr"] << lhm_;
-	GJson::saveToFile(jo);
-
     if (!lhm_.open()) {
 		qWarning() << QString("lhm.open() return false %1").arg(lhm_.err->msg());
 		return false;
@@ -52,7 +47,7 @@ bool NetBlock::doOpen() {
     }
 
     nbDB_ = QSqlDatabase::addDatabase("QSQLITE");
-    nbDB_.setDatabaseName("NetBlock.db");
+    nbDB_.setDatabaseName("netblock.db");
     if(!nbDB_.open()) {
         qWarning() << QString("nbDB.open() return false %1").arg(nbDB_.lastError().text());
         nbDB_.close();
@@ -61,12 +56,16 @@ bool NetBlock::doOpen() {
 
     qDebug() << QString("open success");
 
+    thread_.start();
+
     return true;
 }
 
 bool NetBlock::doClose() {
     lhm_.close();
     device_.close();
+
+    we_.wakeAll();
 
     ouiDB_.close();
     nbDB_.close();
@@ -83,18 +82,21 @@ void NetBlock::captured(GPacket* packet) {
     if(ethHdr->type() == GEthHdr::Arp) {
         qDebug() << "Captured Arp Packet";
         GArpHdr* arpHdr = ethPacket->arpHdr_;
-        if(arpHdr->sip() == intf_->gateway()) {
+        if(gatewayMac_.isNull() && arpHdr->sip() == intf_->gateway()) {
             gatewayMac_ = smac;
+            qDebug() << QString("gateway mac: %1").arg(QString(gatewayMac_));
         }
         if(arpHdr->op() == GArpHdr::Request) {
             HostMap::iterator iter;
             if((iter = nbHosts_.find(smac)) != nbHosts_.end() && arpHdr->tip() == intf_->gateway()) {
-                sendInpect(*iter);
+                qDebug() << QString("Host IP: %1").arg(QString(iter->ip_));
+                sendInfect(*iter);
             }
 
             for(Host& host: nbHosts_) {
                 if(arpHdr->tip() == host.ip_ && smac == gatewayMac_) {
-                    sendInpect(host);
+                    qDebug() << QString("Host IP: %1").arg(QString(host.ip_));
+                    sendInfect(host);
                     break;
                 }
             }
@@ -102,7 +104,7 @@ void NetBlock::captured(GPacket* packet) {
     }
 }
 
-bool NetBlock::sendFindGatewayPacket() {
+void NetBlock::sendFindGatewayPacket() {
     EthArpPacket packet;
 
     GEthHdr* ethHdr = &packet.ethHdr_;
@@ -124,14 +126,12 @@ bool NetBlock::sendFindGatewayPacket() {
     GPacket::Result gatewayRes = device_.write(GBuf(pbyte(&packet), sizeof(packet)));
     if (gatewayRes != GPacket::Ok) {
         qWarning() << QString("device_->write return %1 %2").arg(int(gatewayRes)).arg(device_.err->msg());
-        return false;
     }
-
-    return true;
 }
 
 void NetBlock::run() {
-    GWaitEvent we;
+    sendFindGatewayPacket();
+
     while (active()) {
         block();
         if (!active()) break;
@@ -143,26 +143,42 @@ void NetBlock::block() {
     updateHosts();
 
     for(HostMap::iterator iter = nbHosts_.begin(); iter != nbHosts_.end(); ++iter) {
-        if(nbNewHosts_.find(iter.key()) == nbNewHosts_.end()) {
+        QMutexLocker ml(&lhm_.hosts_.m_);
+        if(nbNewHosts_.find(iter.key()) == nbNewHosts_.end() && lhm_.hosts_.find(iter.key()) != lhm_.hosts_.end()) {
             sendRecover(iter.value());
             if (we_.wait(sendSleepTime_)) return;
         }
     }
 
-    nbHosts_.swap(nbNewHosts_);
-    nbNewHosts_.clear();
+    {
+        QMutexLocker ml(&nbHosts_.m_);
+        nbHosts_.swap(nbNewHosts_);
+        nbNewHosts_.clear();
+    }
+
 
     for(Host& host: nbHosts_) {
-        sendInpect(host);
+        {
+            QMutexLocker ml(&lhm_.hosts_.m_);
+            if(lhm_.hosts_.find(host.mac_) != lhm_.hosts_.end()) {
+                sendInfect(host);
+            }
+        }
         if (we_.wait(sendSleepTime_)) return;
     }
 }
 
 void NetBlock::updateHosts() {
     /*updateDB*/
+    /*dummy data*/
+    Host dum1(GMac("82:b0:17:f9:a0:75"), GIp("192.168.25.35"));
+    nbNewHosts_.insert(dum1.mac_, dum1);
+    Host dum2(GMac("ee:59:80:0d:c6:9c"), GIp("192.168.25.14"));
+    nbNewHosts_.insert(dum1.mac_, dum2);
 }
 
-void NetBlock::sendInpect(Host host) {
+void NetBlock::sendInfect(Host host) {
+    qDebug() << QString("Send Inpect %1").arg(QString(host.ip_));
     EthArpPacket packet;
 
     GEthHdr* ethHdr = &packet.ethHdr_;
@@ -240,3 +256,14 @@ void NetBlock::sendRecover(Host host) {
     }
 }
 
+void NetBlock::propLoad(QJsonObject jo) {
+    GStateObj::propLoad(jo);
+    jo["NBPcapDevice"] >> device_;
+    jo["LiveHostMgr"] >> lhm_;
+}
+
+void NetBlock::propSave(QJsonObject& jo) {
+    GStateObj::propSave(jo);
+    jo["NBPcapDevice"] << device_;
+    jo["LiveHostMgr"] << lhm_;
+}
