@@ -14,7 +14,6 @@ int main(int argc, char *argv[])
     jo["NetBlock"] >> nb;
     jo["NetBlock"] << nb;
     GJson::saveToFile(jo);
-    nb.dbCheck();
     nb.open();
 
 	Widget w;

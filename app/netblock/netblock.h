@@ -25,19 +25,19 @@ private:
     GMac myMac_{GMac::nullMac()};
     GIp myIp_;
 
-    QSqlDatabase ouiDB_;
-    QSqlDatabase nbDB_;
-
     HostMap nbHosts_;
     HostMap nbNewHosts_;
+
+    bool dbCheck();
 
 public:
     NetBlock(QObject* parent = nullptr);
     ~NetBlock();
 
-    void dbCheck();
-
     void updateHosts();
+
+    QSqlDatabase nbDB_;
+    QSqlDatabase ouiDB_;
 
 public slots:
     void captured(GPacket* packet);

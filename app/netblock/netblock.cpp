@@ -8,37 +8,92 @@ NetBlock::~NetBlock() {
     close();
 }
 
-void NetBlock::dbCheck() {
-    QSqlQuery result;
-    result = nbDB_.exec("SELECT name FROM sqlite_master WHERE name = 'host'");
-    qDebug() << QString("result size: %1").arg(result.size());
-    result.next();
-    QSqlRecord record = result.record();
-    qDebug() << QString("record count: %1").arg(record.count());
-    if(record.count() < 1) {
-        nbDB_.exec("CREATE TABLE host (host_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, mac CHAR(17) NOT NULL, last_ip VARCHAR(15) NULL, name VARCHAR(30) NULL)");
+bool NetBlock::dbCheck() {
+    qDebug() << QString("Start dbCheck Function");
+
+    QSqlQuery nbQuery(nbDB_);
+    QSqlQuery ouiQuery(ouiDB_);
+
+    QString result;
+
+    nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'host'");
+    nbQuery.next();
+    result = nbQuery.value(0).toString();
+    if(result.compare("host")) {
+        qDebug() << QString("Create host table");
+        nbQuery.exec("CREATE TABLE host (host_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, mac CHAR(17) NOT NULL, last_ip VARCHAR(15) NULL, name VARCHAR(30) NULL)");
     }
-    result = nbDB_.exec("SELECT name FROM sqlite_master WHERE name = 'host'");
-    qDebug() << QString("result size: %1").arg(result.size());
+
+    nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'time'");
+    nbQuery.next();
+    result = nbQuery.value(0).toString();
+    if(result.compare("time")) {
+        qDebug() << QString("Create time table");
+        nbQuery.exec("CREATE TABLE time (time_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, start_time CHAR(4) NOT NULL, end_time CHAR(4) NOT NULL, day_of_the_week TINYINT NOT NULL)");
+    }
+
+    nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'policy'");
+    nbQuery.next();
+    result = nbQuery.value(0).toString();
+    if(result.compare("policy")) {
+        qDebug() << QString("Create policy table");
+        nbQuery.exec("CREATE TABLE policy (policy_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, host_id INTEGER NOT NULL, time_id INTEGER NOT NULL)");
+    }
+
+    nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'block_host'");
+    nbQuery.next();
+    result = nbQuery.value(0).toString();
+    if(result.compare("block_host")) {
+        qDebug() << QString("Create block_host view");
+        nbQuery.exec("CREATE VIEW block_host as SELECT mac, last_ip, name FROM host WHERE host_id in (SELECT host_id from policy where time_id in (select time_id from time where strftime(\"%H%M\", 'now', 'localtime') BETWEEN start_time AND end_time AND strftime(\"%w\", 'now', 'localtime') = day_of_the_week))");
+    }
+
+    ouiQuery.exec("SELECT name FROM sqlite_master WHERE name = 'oui'");
+    ouiQuery.next();
+    result = ouiQuery.value(0).toString();
+    if(result.compare("oui")) {
+        qDebug() << QString("Create oui table");
+        ouiQuery.exec("CREATE TABLE oui (mac CHAR(20) NOT NULL PRIMARY KEY, organ VARCHAR(64) NOT NULL)");
+
+        QFile file("manuf_rep.txt");
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            qWarning() << QString("Not open oui file");
+           // error message here
+           return false;
+        }
+
+        QString getLine;
+        QTextStream fileStream(&file);
+        while (!fileStream.atEnd()) {
+            getLine = fileStream.readLine();
+            QStringList ouiResult = getLine.split('\t');
+            ouiQuery.prepare("INSERT INTO oui VALUES(:mac, :organ)");
+            ouiQuery.bindValue(":mac", ouiResult.at(0));
+            ouiQuery.bindValue(":organ", ouiResult.at(1));
+            ouiQuery.exec();
+        }
+    }
+
+    return true;
 }
 
 bool NetBlock::doOpen() {
     if (!lhm_.open()) {
-		qWarning() << QString("lhm.open() return false %1").arg(lhm_.err->msg());
-		return false;
-	}
+        qWarning() << QString("lhm.open() return false %1").arg(lhm_.err->msg());
+        return false;
+    }
 
     if (!device_.open()) {
-		SET_ERR(GErr::FAIL, "device_.open() return false");
-		return false;
-	}
+        SET_ERR(GErr::FAIL, "device_.open() return false");
+        return false;
+    }
 
     intf_ = device_.intf();
     Q_ASSERT(intf_ != nullptr);
     myMac_ = intf_->mac();
     myIp_ = intf_->ip();
 
-    ouiDB_ = QSqlDatabase::addDatabase("QSQLITE");
+    ouiDB_ = QSqlDatabase::addDatabase("QSQLITE", "oui.db");
     ouiDB_.setDatabaseName("oui.db");
     if(!ouiDB_.open()) {
         qWarning() << QString("ouiDB.open() return false %1").arg(ouiDB_.lastError().text());
@@ -46,7 +101,7 @@ bool NetBlock::doOpen() {
         return false;
     }
 
-    nbDB_ = QSqlDatabase::addDatabase("QSQLITE");
+    nbDB_ = QSqlDatabase::addDatabase("QSQLITE", "netblock.db");
     nbDB_.setDatabaseName("netblock.db");
     if(!nbDB_.open()) {
         qWarning() << QString("nbDB.open() return false %1").arg(nbDB_.lastError().text());
@@ -54,9 +109,13 @@ bool NetBlock::doOpen() {
         return false;
     }
 
+    if(!dbCheck()) {
+        return false;
+    }
+    thread_.start();
+
     qDebug() << QString("open success");
 
-    thread_.start();
 
     return true;
 }
