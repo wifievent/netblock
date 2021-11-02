@@ -20,8 +20,9 @@ SOURCES += \
     ../../src/livehostmgr.cpp \
     ../../src/oldhostmgr.cpp \
     main.cpp \
-    netblock.cpp \
-    widget.cpp
+    mainwindow.cpp \
+    dinfo.cpp \
+    netblock.cpp
 
 HEADERS += \
     ../../src/etharppacket.h \
@@ -29,11 +30,12 @@ HEADERS += \
     ../../src/host.h \
     ../../src/livehostmgr.h \
     ../../src/oldhostmgr.h \
-    netblock.h \
-    widget.h
+    mainwindow.h \
+    dinfo.h \
+    netblock.h
 
 FORMS += \
-    widget.ui
+    mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

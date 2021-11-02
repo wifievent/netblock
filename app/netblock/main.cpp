@@ -1,5 +1,6 @@
 #include "netblock.h"
 #include "widget.h"
+#include "mainwindow.h"
 
 #include <QApplication>
 
@@ -16,8 +17,11 @@ int main(int argc, char *argv[])
     GJson::saveToFile(jo);
     nb.open();
 
-	Widget w;
-	w.show();
+
+    QIcon icon(":/image/logo/logo.ico");
+
+    MainWindow m;
+    m.show();
     a.exec();
     nb.close();
 }
