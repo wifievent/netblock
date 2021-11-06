@@ -24,141 +24,132 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <widget class="QTabWidget" name="tabWidget">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>1030</width>
-      <height>488</height>
-     </rect>
-    </property>
-    <property name="currentIndex">
-     <number>0</number>
-    </property>
-    <widget class="QWidget" name="device">
-     <attribute name="title">
-      <string>Device</string>
-     </attribute>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <layout class="QVBoxLayout" name="fullLayout">
-        <item>
-         <layout class="QHBoxLayout" name="DeviceInfoLayout">
-          <property name="spacing">
-           <number>50</number>
-          </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="device">
+       <attribute name="title">
+        <string>Device</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0">
+         <layout class="QVBoxLayout" name="fullLayout">
           <item>
-           <layout class="QVBoxLayout" name="devListLayout">
+           <layout class="QHBoxLayout" name="DeviceInfoLayout">
             <property name="spacing">
-             <number>5</number>
+             <number>50</number>
             </property>
             <item>
-             <widget class="QLabel" name="devListLabel">
-              <property name="font">
-               <font>
-                <family>Arial</family>
-                <pointsize>12</pointsize>
-               </font>
+             <layout class="QVBoxLayout" name="devListLayout">
+              <property name="spacing">
+               <number>5</number>
               </property>
-              <property name="text">
-               <string>Device List</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QTableWidget" name="devTable">
-              <property name="baseSize">
-               <size>
-                <width>0</width>
-                <height>4</height>
-               </size>
-              </property>
-              <property name="columnCount">
-               <number>2</number>
-              </property>
-              <column/>
-              <column/>
-             </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="reSearchLayout">
               <item>
-               <widget class="QPushButton" name="reloadBtn">
+               <widget class="QLabel" name="devListLabel">
+                <property name="font">
+                 <font>
+                  <family>Arial</family>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
                 <property name="text">
-                 <string>Reload</string>
+                 <string>Device List</string>
                 </property>
                </widget>
               </item>
               <item>
-               <spacer name="horizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
+               <widget class="QTableWidget" name="devTable">
+                <property name="baseSize">
                  <size>
-                  <width>40</width>
-                  <height>20</height>
+                  <width>0</width>
+                  <height>4</height>
                  </size>
                 </property>
-               </spacer>
+                <property name="lineWidth">
+                 <number>1</number>
+                </property>
+                <property name="columnCount">
+                 <number>3</number>
+                </property>
+                <column>
+                 <property name="text">
+                  <string/>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>IP</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Nick Name</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="reSearchLayout"/>
               </item>
              </layout>
             </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QVBoxLayout" name="devInfoLayout">
-            <property name="spacing">
-             <number>7</number>
-            </property>
             <item>
-             <widget class="QLabel" name="devInfoLabel">
-              <property name="font">
-               <font>
-                <family>Arial</family>
-                <pointsize>12</pointsize>
-               </font>
-              </property>
-              <property name="text">
-               <string>Device Information</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QListWidget" name="devInfo"/>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="btnLayout">
+             <layout class="QVBoxLayout" name="devInfoLayout">
               <property name="spacing">
                <number>7</number>
               </property>
               <item>
-               <widget class="QPushButton" name="policyBtn">
+               <widget class="QLabel" name="devInfoLabel">
+                <property name="font">
+                 <font>
+                  <family>Arial</family>
+                  <pointsize>12</pointsize>
+                 </font>
+                </property>
                 <property name="text">
-                 <string>Policy</string>
+                 <string>Device Information</string>
                 </property>
                </widget>
               </item>
               <item>
-               <spacer name="horizontalSpacer_2">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
+               <widget class="QListWidget" name="devInfo"/>
               </item>
               <item>
-               <widget class="QPushButton" name="deleteBtn">
-                <property name="text">
-                 <string>Delete</string>
+               <layout class="QHBoxLayout" name="btnLayout">
+                <property name="spacing">
+                 <number>7</number>
                 </property>
-               </widget>
+                <item>
+                 <widget class="QPushButton" name="devPolicyBtn">
+                  <property name="text">
+                   <string>Policy</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_2">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="devDeleteBtn">
+                  <property name="text">
+                   <string>Delete</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </item>
@@ -167,272 +158,281 @@
          </layout>
         </item>
        </layout>
-      </item>
-     </layout>
-    </widget>
-    <widget class="QWidget" name="policy">
-     <attribute name="title">
-      <string>Policy</string>
-     </attribute>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QTableWidget" name="tableWidget">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="baseSize">
-         <size>
-          <width>0</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="rowCount">
-         <number>24</number>
-        </property>
-        <property name="columnCount">
-         <number>7</number>
-        </property>
-        <attribute name="horizontalHeaderMinimumSectionSize">
-         <number>0</number>
-        </attribute>
-        <attribute name="verticalHeaderMinimumSectionSize">
-         <number>0</number>
-        </attribute>
-        <row>
-         <property name="text">
-          <string>0</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>1</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>2</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>3</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>4</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>5</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>6</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>7</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>8</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>9</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>10</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>11</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>12</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>13</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>14</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>15</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>16</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>17</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>18</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>19</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>20</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>21</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>22</string>
-         </property>
-        </row>
-        <row>
-         <property name="text">
-          <string>23</string>
-         </property>
-        </row>
-        <column>
-         <property name="text">
-          <string>Sun</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Mon</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Tue</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Wed</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Thu</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Fri</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Sat</string>
-         </property>
-        </column>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
+      </widget>
+      <widget class="QWidget" name="policy">
+       <attribute name="title">
+        <string>Policy</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QLabel" name="hostFilterLabel">
+         <widget class="QTableWidget" name="tableWidget">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="text">
-           <string>Device Filter</string>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
           </property>
+          <property name="baseSize">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="rowCount">
+           <number>24</number>
+          </property>
+          <property name="columnCount">
+           <number>7</number>
+          </property>
+          <attribute name="horizontalHeaderMinimumSectionSize">
+           <number>0</number>
+          </attribute>
+          <attribute name="verticalHeaderMinimumSectionSize">
+           <number>0</number>
+          </attribute>
+          <row>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>2</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>3</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>4</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>5</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>6</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>7</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>8</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>9</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>10</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>11</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>12</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>13</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>14</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>15</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>16</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>17</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>18</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>19</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>20</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>21</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>22</string>
+           </property>
+          </row>
+          <row>
+           <property name="text">
+            <string>23</string>
+           </property>
+          </row>
+          <column>
+           <property name="text">
+            <string>Sun</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Mon</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Tue</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Wed</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Thu</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Fri</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Sat</string>
+           </property>
+          </column>
          </widget>
         </item>
         <item>
-         <widget class="QComboBox" name="hostFilter">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="addButton">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Add</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="editButton">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Edit</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="deleteButton">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Delete</string>
-          </property>
-         </widget>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLabel" name="hostFilterLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Device Filter</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="hostFilter">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="policyAddButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Add</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="policyEditButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Edit</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="policyDeleteButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Delete</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
-      </item>
-     </layout>
-    </widget>
-   </widget>
+      </widget>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>

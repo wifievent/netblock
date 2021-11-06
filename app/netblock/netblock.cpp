@@ -13,7 +13,6 @@ bool NetBlock::dbCheck() {
 
     QSqlQuery nbQuery(nbDB_);
     QSqlQuery ouiQuery(ouiDB_);
-
     QString result;
 
     nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'host'");
@@ -21,15 +20,7 @@ bool NetBlock::dbCheck() {
     result = nbQuery.value(0).toString();
     if(result.compare("host")) {
         qDebug() << QString("Create host table");
-        nbQuery.exec("CREATE TABLE host (host_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, mac CHAR(17) NOT NULL, last_ip VARCHAR(15) NULL, name VARCHAR(30) NULL)");
-    }
-
-    nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'time'");
-    nbQuery.next();
-    result = nbQuery.value(0).toString();
-    if(result.compare("time")) {
-        qDebug() << QString("Create time table");
-        nbQuery.exec("CREATE TABLE time (time_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, start_time CHAR(4) NOT NULL, end_time CHAR(4) NOT NULL, day_of_the_week TINYINT NOT NULL)");
+        nbQuery.exec("CREATE TABLE host (host_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, mac CHAR(17) NOT NULL, last_ip VARCHAR(15) NULL, host_name VARCHAR(30) NULL, nick_name VARCHAR(30) NULL, oui VARCHAR(20) NULL)");
     }
 
     nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'policy'");
@@ -37,7 +28,7 @@ bool NetBlock::dbCheck() {
     result = nbQuery.value(0).toString();
     if(result.compare("policy")) {
         qDebug() << QString("Create policy table");
-        nbQuery.exec("CREATE TABLE policy (policy_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, host_id INTEGER NOT NULL, time_id INTEGER NOT NULL)");
+        nbQuery.exec("CREATE TABLE policy (policy_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, host_id INTEGER NOT NULL, start_time CHAR(4) NOT NULL, end_time CHAR(4) NOT NULL, day_of_the_week TINYINT NOT NULL)");
     }
 
     nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'block_host'");
@@ -45,7 +36,7 @@ bool NetBlock::dbCheck() {
     result = nbQuery.value(0).toString();
     if(result.compare("block_host")) {
         qDebug() << QString("Create block_host view");
-        nbQuery.exec("CREATE VIEW block_host as SELECT mac, last_ip, name FROM host WHERE host_id in (SELECT host_id from policy where time_id in (select time_id from time where strftime(\"%H%M\", 'now', 'localtime') BETWEEN start_time AND end_time AND strftime(\"%w\", 'now', 'localtime') = day_of_the_week))");
+        nbQuery.exec("CREATE VIEW block_host as SELECT mac, last_ip, name FROM host WHERE host_id in (SELECT host_id from policy where strftime(\"%H%M\", 'now', 'localtime') BETWEEN start_time AND end_time AND strftime(\"%w\", 'now', 'localtime') = day_of_the_week)");
     }
 
     ouiQuery.exec("SELECT name FROM sqlite_master WHERE name = 'oui'");
@@ -100,7 +91,6 @@ bool NetBlock::doOpen() {
         ouiDB_.close();
         return false;
     }
-
     nbDB_ = QSqlDatabase::addDatabase("QSQLITE", "netblock.db");
     nbDB_.setDatabaseName("netblock.db");
     if(!nbDB_.open()) {
@@ -229,11 +219,12 @@ void NetBlock::block() {
 
 void NetBlock::updateHosts() {
     /*updateDB*/
-    /*dummy data*/
-    Host dum1(GMac("82:b0:17:f9:a0:75"), GIp("192.168.25.35"));
-    nbNewHosts_.insert(dum1.mac_, dum1);
-    Host dum2(GMac("ee:59:80:0d:c6:9c"), GIp("192.168.25.14"));
-    nbNewHosts_.insert(dum1.mac_, dum2);
+    QSqlQuery nbQuery(nbDB_);
+    nbQuery.exec("SELECT * FROM block_host");
+    while(nbQuery.next()) {
+        Host host(GMac(nbQuery.value(0).toString()), GIp(nbQuery.value(1).toString()), nbQuery.value(2).toString());
+        nbNewHosts_.insert(host.mac_, host);
+    }
 }
 
 void NetBlock::sendInfect(Host host) {

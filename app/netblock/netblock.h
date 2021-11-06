@@ -15,7 +15,6 @@ struct NetBlock : GStateObj {
     int nbUpdateTime_{60000}; // 1 minutes
 
 private:
-    LiveHostMgr lhm_;
 	GPcapDevice device_;
     GIntf* intf_;
 
@@ -35,6 +34,8 @@ public:
     ~NetBlock();
 
     void updateHosts();
+
+    LiveHostMgr lhm_;
 
     QSqlDatabase nbDB_;
     QSqlDatabase ouiDB_;

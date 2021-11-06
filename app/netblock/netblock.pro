@@ -22,7 +22,9 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     dinfo.cpp \
-    netblock.cpp
+    netblock.cpp \
+    policyconfig.cpp \
+    policyobj.cpp
 
 HEADERS += \
     ../../src/etharppacket.h \
@@ -32,10 +34,13 @@ HEADERS += \
     ../../src/oldhostmgr.h \
     mainwindow.h \
     dinfo.h \
-    netblock.h
+    netblock.h \
+    policyconfig.h \
+    policyobj.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    policyconfig.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

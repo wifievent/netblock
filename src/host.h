@@ -5,7 +5,7 @@
 #include <GIp>
 
 struct Host {
-	Host();
+    Host() {};
 	Host(GMac mac, GIp ip) : mac_(mac), ip_(ip) {}
 	Host(GMac mac, GIp ip, QString hostName): mac_(mac), ip_(ip), hostName_(hostName) {}
 
