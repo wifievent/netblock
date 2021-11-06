@@ -7,6 +7,8 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
 {
     ui->setupUi(this);
 
+    qDebug() << (void*)this;
+
     if(policyId == 0) {
         this->setWindowTitle("New");
     }
@@ -46,7 +48,10 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
         hostId_ = query->value(0).toInt();
     }
 
-    qDebug() << ui->sHourBox->findText(QString::number(sTime_.hour()));
+    qDebug() << "PolicyConfig" << ui->sHourBox->findText(QString::number(sTime_.hour()));
+
+    qDebug() << "PolicyComboBox Size" << ui->sHourBox->count();
+
 
     ui->sHourBox->setCurrentIndex(ui->sHourBox->findText(QString::number(sTime_.hour())));
     qDebug() << "config1";
@@ -65,6 +70,7 @@ PolicyConfig::~PolicyConfig()
 
 void PolicyConfig::on_sHourBox_currentIndexChanged(int index)
 {
+    qDebug() << (void*)this;
     sTime_ = QTime(ui->sHourBox->currentText().toInt(), sTime_.minute());
     if(sTime_ > eTime_) {
         eTime_ = QTime(sTime_.hour() + 1, eTime_.minute());
@@ -89,6 +95,7 @@ void PolicyConfig::on_eHourBox_currentIndexChanged(int index)
 }
 
 void PolicyConfig::setETimeLaterSTime() {
+    qDebug() << (void*)this;
     ui->eHourBox->clear();
     for(int i = sTime_.minute() < 50 ? sTime_.hour() : sTime_.hour() + 1; i < 24; ++i) {
         ui->eHourBox->addItem(QString::number(i));
