@@ -109,7 +109,7 @@ void OldHostMgr::run() {
 			QMutexLocker ml(&lhm_->hosts_.m_);
 			qint64 now = et.elapsed();
 			for (Host& host : lhm_->hosts_) {
-				qDebug() << QString("lastAccess=%1 now=%2 diff=%3").arg(host.lastAccess_).arg(now).arg(now-host.lastAccess_); // gilgil temp 2021.10.24
+				// qDebug() << QString("lastAccess=%1 now=%2 diff=%3").arg(host.lastAccess_).arg(now).arg(now-host.lastAccess_); // gilgil temp 2021.10.24
 				if (host.lastAccess_ + scanStartTimeout_ < now) {
 					QMutexLocker ml(&astm_.m_);
 					ActiveScanThreadMap::iterator it = astm_.find(host.mac_);
