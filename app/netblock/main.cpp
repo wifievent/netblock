@@ -1,10 +1,10 @@
 #include "mainwindow.h"
 
-#include <QApplication>
+#include <GApp>
 
 int main(int argc, char *argv[])
 {
-	QApplication a(argc, argv);
+	GApp a(argc, argv);
 
     QIcon icon(":/image/logo/logo.ico");
 
