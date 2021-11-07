@@ -11,36 +11,36 @@
 #include "oldhostmgr.h"
 
 struct G_EXPORT LiveHostMgr : GStateObj {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	LiveHostMgr(QObject* parent = nullptr);
-	~LiveHostMgr() override;
+    LiveHostMgr(QObject* parent = nullptr);
+    ~LiveHostMgr() override;
 
 protected:
-	bool doOpen() override;
-	bool doClose() override;
+    bool doOpen() override;
+    bool doClose() override;
 
 public:
-	HostMap hosts_;
-	GPcapDevice device_;
-	FullScan fs_;
-	OldHostMgr ohm_;
-	QElapsedTimer et_;
+    HostMap hosts_;
+    GPcapDevice device_;
+    FullScan fs_;
+    OldHostMgr ohm_;
+    QElapsedTimer et_;
 
-	GMac myMac_{GMac::nullMac()};
+    GMac myMac_{GMac::nullMac()};
 
 protected:
-	bool processDhcp(GPacket* ethPacket);
+    bool processDhcp(GPacket* ethPacket);
 
 public slots:
-	void captured(GPacket* packet);
+    void captured(GPacket* packet);
 
 signals:
-	void hostDetected(Host* host);
-	void hostDeleted(Host* host);
+    void hostDetected(Host* host);
+    void hostDeleted(Host* host);
 
 public:
-	void propLoad(QJsonObject jo) override;
-	void propSave(QJsonObject& jo) override;
+    void propLoad(QJsonObject jo) override;
+    void propSave(QJsonObject& jo) override;
 };
