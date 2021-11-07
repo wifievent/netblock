@@ -188,9 +188,10 @@ void MainWindow::on_devTable_cellClicked(int row, int column)
     setListWidgetItem("OUI");
     setListWidgetItem("MAC");
     setListWidgetItem("IP");
+    setListWidgetItem("Host_Name");
     QWidget *n_widget = new QWidget();
     QHBoxLayout *n_layout = new QHBoxLayout();
-    QLabel *n_label = new QLabel("Name\t");
+    QLabel *n_label = new QLabel("Nick_Name\t");
     QLineEdit *n_edit = new QLineEdit();
     QPushButton *n_btn = new QPushButton("Edit");
     n_edit->setText(dInfo_->nickName_);
@@ -220,6 +221,8 @@ void MainWindow::setListWidgetItem(QString str)
         val_label->setText(QString(dInfo_->mac_));
     }else if(str == "IP") {
         val_label->setText(QString(dInfo_->ip_));
+    }else if(str == "Host_Name") {
+        val_label->setText(dInfo_->hostName_);
     }
     layout->addWidget(key_label);
     layout->addWidget(val_label);
