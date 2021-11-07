@@ -356,7 +356,7 @@ void MainWindow::openPolicyConfig() {
         setPolicyTable();
         ui->tableWidget->clearSelection();
         nb_.block();
-        qDebug() << "nilnsdmfnlidas;f";
+        qDebug() << "Policy Config Accecpted";
     }
 }
 

@@ -18,6 +18,8 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
 
     hostId_ = hostId;
     policyId_ = policyId;
+
+    qDebug() << "TESTESTESTEST" << hostId << policyId;
     for(int i = 0; i < 7; ++i) {
         dayOfWeek_.append(false);
     }
@@ -28,8 +30,8 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
     sTime_ = QTime(now.hour(), now.minute() - now.minute() % 10);
     eTime_ = sTime_.addSecs(600);
     if(!policyId) {
-        for(int i = 0; i < 7; ++i) {
-            dayOfWeek_[indexList[i].column()] = true;
+        for(QModelIndexList::iterator iter = indexList.begin(); iter != indexList.end(); ++iter) {
+            dayOfWeek_[iter->column()] = true;
         }
         sTime_ = QTime(indexList.constFirst().row(), 0);
         eTime_ = QTime(indexList.constLast().row(), 0);
@@ -52,6 +54,7 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
 
         hostId_ = query->value(0).toInt();
 
+        qDebug() << "else in"<< sTime_.hour() << sTime_.minute() << eTime_.hour() << eTime_.minute();
     }
 
     ui->sHourBox->setCurrentIndex(ui->sHourBox->findText(QString::number(sTime_.hour())));
@@ -68,9 +71,7 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
     ui->dayOfTheWeekCheck_5->setChecked(dayOfWeek_[5]);
     ui->dayOfTheWeekCheck_6->setChecked(dayOfWeek_[6]);
 
-    QObject::connect(ui->applyButton, SIGNAL(clicked()), this, SLOT(accept()));
-    QObject::connect(ui->deleteButton, SIGNAL(clicked()), this, SLOT(reject()));
-    QObject::connect(ui->cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
+    qDebug() << "end "<< sTime_.hour() << sTime_.minute() << eTime_.hour() << eTime_.minute();
 }
 
 PolicyConfig::~PolicyConfig()
@@ -82,7 +83,7 @@ void PolicyConfig::on_sHourBox_currentIndexChanged(int index)
 {
 	(void)index;
 
-    sTime_ = QTime(ui->sHourBox->currentText().toInt(), ui->sMinBox->currentText().toInt());
+    sTime_ = QTime(ui->sHourBox->currentText().toInt(), sTime_.minute());
 }
 
 
@@ -98,18 +99,19 @@ void PolicyConfig::on_eHourBox_currentIndexChanged(int index)
 {
 	(void)index;
 
-    eTime_ = QTime(ui->eHourBox->currentText().toInt(), ui->eMinBox->currentText().toInt());
+    eTime_ = QTime(ui->eHourBox->currentText().toInt(), eTime_.minute());
 }
 
 void PolicyConfig::on_eMinBox_currentIndexChanged(int index)
 {
 	(void)index;
 
-    eTime_ = QTime(ui->eHourBox->currentText().toInt(), ui->eMinBox->currentText().toInt());
+    eTime_ = QTime(eTime_.hour(), ui->eMinBox->currentText().toInt());
 }
 
 void PolicyConfig::on_applyButton_clicked()
 {
+    qDebug() << sTime_.hour() << sTime_.minute() << eTime_.hour() << eTime_.minute();
     if(sTime_ < eTime_ || (ui->eHourBox->currentText().toInt() == 24 && ui->eMinBox->currentText().toInt() == 0)) {
         dayOfWeek_[0] = ui->dayOfTheWeekCheck_0->isChecked();
         dayOfWeek_[1] = ui->dayOfTheWeekCheck_1->isChecked();
@@ -143,6 +145,7 @@ void PolicyConfig::on_applyButton_clicked()
                 }
             }
         }
+        accept();
         close();
     } else if(eTime_.hour() < 0) {
         QMessageBox::warning(this, "Warning", "You Check EndTime Over than 24:00");
@@ -157,6 +160,7 @@ void PolicyConfig::on_deleteButton_clicked()
     query_->prepare("DELETE FROM policy WHERE policy_id = :policy_id");
     query_->bindValue(":policy_id", policyId_);
     query_->exec();
+    accept();
     close();
 }
 
