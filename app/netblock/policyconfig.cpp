@@ -28,7 +28,9 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
     sTime_ = QTime(now.hour(), now.minute() - now.minute() % 10);
     eTime_ = sTime_.addSecs(600);
     if(!policyId) {
-        dayOfWeek_[indexList.constFirst().column()] = true;
+        for(int i = 0; i < 7; ++i) {
+            dayOfWeek_[indexList[i].column()] = true;
+        }
         sTime_ = QTime(indexList.constFirst().row(), 0);
         eTime_ = QTime(indexList.constLast().row(), 0);
         if(indexList.constLast().row() + 1 == 24) {
