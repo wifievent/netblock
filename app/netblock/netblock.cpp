@@ -36,7 +36,7 @@ bool NetBlock::dbCheck() {
     result = nbQuery.value(0).toString();
     if(result.compare("block_host")) {
         qDebug() << QString("Create block_host view");
-        nbQuery.exec("CREATE VIEW block_host as SELECT mac, last_ip, name FROM host WHERE host_id in (SELECT host_id from policy where strftime(\"%H%M\", 'now', 'localtime') BETWEEN start_time AND end_time AND strftime(\"%w\", 'now', 'localtime') = day_of_the_week)");
+        nbQuery.exec("CREATE VIEW block_host as SELECT mac, last_ip, host_name FROM host WHERE host_id in (SELECT host_id from policy where strftime(\"%H%M\", 'now', 'localtime') BETWEEN start_time AND end_time AND strftime(\"%w\", 'now', 'localtime') = day_of_the_week)");
     }
 
     ouiQuery.exec("SELECT name FROM sqlite_master WHERE name = 'oui'");
@@ -106,7 +106,6 @@ bool NetBlock::doOpen() {
 
     qDebug() << QString("open success");
 
-
     return true;
 }
 
@@ -127,7 +126,13 @@ void NetBlock::captured(GPacket* packet) {
 
     GEthHdr* ethHdr = ethPacket->ethHdr_;
     GMac smac = ethHdr->smac();
-    if(smac == myMac_) return;
+    if(smac == myMac_) {
+        if(ethHdr->dmac() == myMac_) {
+            packet->ethHdr_->dmac_ = gatewayMac_;
+            device_.write(packet);
+        }
+        return;
+    }
     if(ethHdr->type() == GEthHdr::Arp) {
         qDebug() << "Captured Arp Packet";
         GArpHdr* arpHdr = ethPacket->arpHdr_;
@@ -181,6 +186,8 @@ void NetBlock::sendFindGatewayPacket() {
 void NetBlock::run() {
     sendFindGatewayPacket();
 
+    qDebug() << "NeBlock RUN!!!!!!!!";
+
     while (active()) {
         block();
         if (!active()) break;
@@ -191,7 +198,9 @@ void NetBlock::run() {
 void NetBlock::block() {
     updateHosts();
 
+    qDebug() << "Recover";
     for(HostMap::iterator iter = nbHosts_.begin(); iter != nbHosts_.end(); ++iter) {
+        qDebug() << "Recover for";
         QMutexLocker ml(&lhm_.hosts_.m_);
         if(nbNewHosts_.find(iter.key()) == nbNewHosts_.end() && lhm_.hosts_.find(iter.key()) != lhm_.hosts_.end()) {
             sendRecover(iter.value());
@@ -206,7 +215,9 @@ void NetBlock::block() {
     }
 
 
+    qDebug() << "Infect";
     for(Host& host: nbHosts_) {
+        qDebug() << "Infect for";
         {
             QMutexLocker ml(&lhm_.hosts_.m_);
             if(lhm_.hosts_.find(host.mac_) != lhm_.hosts_.end()) {

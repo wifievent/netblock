@@ -112,7 +112,8 @@ void LiveHostMgr::captured(GPacket* packet) {
 	GEthPacket* ethPacket = PEthPacket(packet);
 
 	GEthHdr* ethHdr = ethPacket->ethHdr_;
-	GMac smac = ethHdr->smac();
+    GMac smac = ethHdr->smac();
+
 	if (smac == myMac_) return;
 
 	if (processDhcp(ethPacket)) return;

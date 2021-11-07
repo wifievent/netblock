@@ -49,11 +49,17 @@ void MainWindow::processHostDetected(Host* host) {
             nbQuery.bindValue(":host_id", iter->hostId_);
             nbQuery.exec();
         }
+        if(iter->nickName_.isNull()) {
+            iter->nickName_ = iter->hostName_;
+            nbQuery.prepare("UPDATE host SET nick_name = :nick_name WHERE host_id = :host_id");
+            nbQuery.bindValue(":nick_name", iter->nickName_);
+            nbQuery.bindValue(":host_id", iter->hostId_);
+        }
         setDevTableItem();
     } else {
         QSqlQuery ouiQuery(nb_.ouiDB_);
 
-        ouiQuery.prepare("SELECT oui FROm oui WHERE substr(mac, 1, 8) = substr(:mac, 1, 8)");
+        ouiQuery.prepare("SELECT organ FROM oui WHERE substr(mac, 1, 8) = substr(:mac, 1, 8)");
         ouiQuery.bindValue(":mac", QString(tmp.mac_));
         ouiQuery.exec();
 
@@ -169,6 +175,7 @@ void MainWindow::resetHostFilter() {
         ui->hostFilter->addItem(iter->nickName_, iter->hostId_);
     }
     qDebug() << ui->hostFilter->count();
+    setHostFilter();
 }
 
 void MainWindow::on_devTable_cellClicked(int row, int column)
@@ -240,6 +247,7 @@ void MainWindow::on_devDeleteBtn_clicked()
     dInfoList_.removeAt(dInfoList_.indexOf(*dInfo_));
     dInfo_ = nullptr;
     setDevTableItem();
+    ui->devInfo->clear();
 }
 
 void MainWindow::onEditBtnClicked()
@@ -269,15 +277,18 @@ void MainWindow::on_tableWidget_itemSelectionChanged()
         ui->policyEditButton->setEnabled(true);
     }
     if (!indexList.isEmpty()) {
+        ui->policyDeleteButton->setDisabled(true);
+        ui->policyEditButton->setDisabled(true);
         ui->policyAddButton->setEnabled(true);
         QTableWidgetItem *firstItem = ui->tableWidget->item(indexList.constFirst().row(), indexList.constFirst().column());
         if (firstItem != nullptr) {
             selectedPolicyId_ = firstItem->data(Qt::UserRole).toInt();
             ui->policyEditButton->setEnabled(true);
             ui->policyDeleteButton->setEnabled(true);
+            ui->policyAddButton->setDisabled(true);
             return;
         }
-        selectedPolicyId_ = 0;\
+        selectedPolicyId_ = 0;
         return;
     }
     selectedPolicyId_ = 0;
@@ -285,7 +296,15 @@ void MainWindow::on_tableWidget_itemSelectionChanged()
 
 void MainWindow::on_hostFilter_currentIndexChanged(int index)
 {
-    selectedHostId_ = ui->hostFilter->currentData().toInt();
+    if(ui->hostFilter->count() == dInfoList_.length()) {
+        selectedHostId_ = ui->hostFilter->currentData().toInt();
+        setPolicyListFromDatabase();
+        setPolicyTable();
+        ui->tableWidget->clearSelection();
+        ui->policyAddButton->setDisabled(true);
+        ui->policyEditButton->setDisabled(true);
+        ui->policyDeleteButton->setDisabled(true);
+    }
 }
 
 void MainWindow::on_policyAddButton_clicked()
@@ -307,6 +326,7 @@ void MainWindow::on_policyDeleteButton_clicked()
     setPolicyListFromDatabase();
     setPolicyTable();
     ui->tableWidget->clearSelection();
+    nb_.block();
 }
 
 void MainWindow::openPolicyConfig() {
@@ -328,6 +348,8 @@ void MainWindow::openPolicyConfig() {
         setPolicyListFromDatabase();
         setPolicyTable();
         ui->tableWidget->clearSelection();
+        nb_.block();
+        qDebug() << "nilnsdmfnlidas;f";
     }
 }
 

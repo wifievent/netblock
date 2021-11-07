@@ -25,6 +25,8 @@ private slots:
 
     void on_eHourBox_currentIndexChanged(int index);
 
+    void on_eMinBox_currentIndexChanged(int index);
+
     void on_applyButton_clicked();
 
     void on_deleteButton_clicked();
@@ -34,7 +36,7 @@ private slots:
 private:
     Ui::PolicyConfig *ui;
 
-    bool dayOfWeek_[7] = {0, };
+    QList<bool> dayOfWeek_;
 
     QSqlQuery* query_;
 
@@ -48,7 +50,8 @@ private:
     int hostId_;
     int policyId_;
 
-    void setETimeLaterSTime();
+    void setEndHourBox();
+    void setEndMinBox();
 
 };
 
