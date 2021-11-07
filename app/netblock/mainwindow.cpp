@@ -180,6 +180,8 @@ void MainWindow::resetHostFilter() {
 
 void MainWindow::on_devTable_cellClicked(int row, int column)
 {
+	(void)column;
+
     ui->devInfo->clear();
     dInfo_ = &dInfoList_[row];
 
@@ -296,6 +298,8 @@ void MainWindow::on_tableWidget_itemSelectionChanged()
 
 void MainWindow::on_hostFilter_currentIndexChanged(int index)
 {
+	(void)index;
+
     if(ui->hostFilter->count() == dInfoList_.length()) {
         selectedHostId_ = ui->hostFilter->currentData().toInt();
         setPolicyListFromDatabase();

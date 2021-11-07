@@ -76,6 +76,8 @@ PolicyConfig::~PolicyConfig()
 
 void PolicyConfig::on_sHourBox_currentIndexChanged(int index)
 {
+	(void)index;
+
     sTime_ = QTime(ui->sHourBox->currentText().toInt(), sTime_.minute());
     if(sTime_ > eTime_ && eTime_.hour() > -1) {
         if(sTime_.minute() == 50) {
@@ -91,6 +93,8 @@ void PolicyConfig::on_sHourBox_currentIndexChanged(int index)
 
 void PolicyConfig::on_sMinBox_currentIndexChanged(int index)
 {
+	(void)index;
+
     sTime_ = QTime(sTime_.hour(), ui->sMinBox->currentText().toInt());
     if(sTime_ > eTime_ && eTime_.hour() > -1) {
         if(sTime_.minute() == 50) {
@@ -106,6 +110,8 @@ void PolicyConfig::on_sMinBox_currentIndexChanged(int index)
 
 void PolicyConfig::on_eHourBox_currentIndexChanged(int index)
 {
+	(void)index;
+
     if(ui->eHourBox->count() > 0) {
         if(ui->eHourBox->currentText().toInt() == 24 || ui->eHourBox->count() > 2) {
             eTime_ = QTime(ui->eHourBox->currentText().toInt(), eTime_.minute());
@@ -116,6 +122,8 @@ void PolicyConfig::on_eHourBox_currentIndexChanged(int index)
 
 void PolicyConfig::on_eMinBox_currentIndexChanged(int index)
 {
+	(void)index;
+
     qDebug() << "coun" << ui->eMinBox->count();
     if(ui->eMinBox->count() > 0) {
         if(ui->eMinBox->count() > 1 || ui->eMinBox->currentText().toInt() == 50)
