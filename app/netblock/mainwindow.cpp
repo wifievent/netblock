@@ -172,9 +172,8 @@ void MainWindow::activateBtn() {
 void MainWindow::resetHostFilter() {
     ui->hostFilter->clear();
     for(DInfoList::iterator iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter) {
-        ui->hostFilter->addItem(iter->nickName_, iter->hostId_);
+        ui->hostFilter->addItem(iter->nickName_.isNull() ? QString(iter->ip_) : iter->nickName_, iter->hostId_);
     }
-    qDebug() << ui->hostFilter->count();
     setHostFilter();
 }
 
