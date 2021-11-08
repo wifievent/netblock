@@ -102,6 +102,7 @@ void MainWindow::processHostDetected(Host* host) {
         }
         resetHostFilter();
     }
+    nb_.block();
 }
 
 void MainWindow::processHostDeleted(Host* host) {

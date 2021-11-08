@@ -196,7 +196,7 @@ void NetBlock::run() {
 
 
     while (active()) {
-        qDebug() << "run in while";
+        updateHosts();
         block();
         if (!active()) break;
         if (we_.wait(nbUpdateTime_)) break;
@@ -205,7 +205,6 @@ void NetBlock::run() {
 
 void NetBlock::block() {
     qDebug() << "in block function";
-    updateHosts();
 
     for(HostMap::iterator iter = nbHosts_.begin(); iter != nbHosts_.end(); ++iter) {
         QMutexLocker ml(&lhm_.hosts_.m_);
