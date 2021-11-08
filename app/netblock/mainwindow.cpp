@@ -138,7 +138,6 @@ void MainWindow::setDevTableWidget() {
     ui->devTable->setFocusPolicy(Qt::NoFocus);
     ui->devTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 	ui->devTable->resizeColumnToContents(0);
-	//ui->devTable->resizeColumnToContents(1); // gilgil temp
     ui->devTable->horizontalHeader()->setStretchLastSection(true);
 }
 
