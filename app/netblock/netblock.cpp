@@ -147,6 +147,10 @@ bool NetBlock::doOpen() {
 }
 
 bool NetBlock::doClose() {
+    for(Host& host: nbHosts_) {
+        sendRecover(host);
+    }
+
     lhm_.close();
     device_.close();
 
@@ -210,16 +214,6 @@ void NetBlock::block() {
     }
 }
 
-void NetBlock::recover() {
-    for(HostMap::iterator iter = nbHosts_.begin(); iter != nbHosts_.end(); ++iter) {
-        QMutexLocker ml(&lhm_.hosts_.m_);
-        if(nbNewHosts_.find(iter.key()) == nbNewHosts_.end() && lhm_.hosts_.find(iter.key()) != lhm_.hosts_.end()) {
-            sendRecover(iter.value());
-            if (we_.wait(sendSleepTime_)) return;
-        }
-    }
-}
-
 void NetBlock::updateHosts() {
     qDebug() << "Update NB Hosts";
     /*updateDB*/
@@ -228,9 +222,24 @@ void NetBlock::updateHosts() {
         QMutexLocker ml(&nbDBLock_);
         nbQuery.exec("SELECT * FROM block_host");
     }
+
     while(nbQuery.next()) {
         Host host(GMac(nbQuery.value(0).toString()), GIp(nbQuery.value(1).toString()), nbQuery.value(2).toString());
         nbNewHosts_.insert(host.mac_, host);
+    }
+
+    for(HostMap::iterator iter = nbHosts_.begin(); iter != nbHosts_.end(); ++iter) {
+        QMutexLocker ml(&lhm_.hosts_.m_);
+        if(nbNewHosts_.find(iter.key()) == nbNewHosts_.end() && lhm_.hosts_.find(iter.key()) != lhm_.hosts_.end()) {
+            sendRecover(iter.value());
+            if (we_.wait(sendSleepTime_)) return;
+        }
+    }
+
+    {
+        QMutexLocker ml(&nbHosts_.m_);
+        nbHosts_.swap(nbNewHosts_);
+        nbNewHosts_.clear();
     }
 }
 
@@ -318,14 +327,6 @@ void NetBlock::DBUpdateThread::run() {
     NetBlock* netBlock = dynamic_cast<NetBlock*>(parent());
     while(netBlock->active()) {
         netBlock->updateHosts();
-
-        netBlock->recover();
-
-        {
-            QMutexLocker ml(&netBlock->nbHosts_.m_);
-            netBlock->nbHosts_.swap(netBlock->nbNewHosts_);
-            netBlock->nbNewHosts_.clear();
-        }
 
         if (!netBlock->active()) break;
         if (we_.wait(netBlock->nbUpdateTime_)) break;

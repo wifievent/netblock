@@ -356,16 +356,19 @@ void MainWindow::on_hostFilter_currentIndexChanged(int index)
 
 void MainWindow::on_policyAddButton_clicked()
 {
+    qDebug() << "policy add buttton clicked";
     openPolicyConfig();
 }
 
 void MainWindow::on_policyEditButton_clicked()
 {
+    qDebug() << "policy edit buttton clicked";
     openPolicyConfig();
 }
 
 void MainWindow::on_policyDeleteButton_clicked()
 {
+    qDebug() << "policy delete buttton clicked";
     QSqlQuery nbQuery(nb_.nbDB_);
 
     {
@@ -378,6 +381,7 @@ void MainWindow::on_policyDeleteButton_clicked()
     setPolicyListFromDatabase();
     setPolicyTable();
     ui->tableWidget->clearSelection();
+    nb_.updateHosts();
     nb_.block();
 }
 

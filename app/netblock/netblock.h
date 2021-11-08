@@ -56,7 +56,6 @@ public:
 public slots:
     void captured(GPacket* packet);
     void block();
-    void recover();
 
 protected:
 	bool doOpen() override;
