@@ -1,7 +1,7 @@
 #include "policyconfig.h"
 #include "ui_policyconfig.h"
 
-PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, QSqlQuery *query, QWidget *parent) :
+PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, QSqlQuery *query, QMutex* m, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::PolicyConfig)
 {
@@ -18,13 +18,13 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
 
     hostId_ = hostId;
     policyId_ = policyId;
+    query_ = query;
+    m_ = m;
 
     qDebug() << "TESTESTESTEST" << hostId << policyId;
     for(int i = 0; i < 7; ++i) {
         dayOfWeek_.append(false);
     }
-
-    query_ = query;
 
     QTime now = QTime::currentTime();
     sTime_ = QTime(now.hour(), now.minute() - now.minute() % 10);
@@ -40,9 +40,14 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
         }
     } else {
         ui->deleteButton->setEnabled(true);
-        query_->prepare("SELECT host_id, start_time, end_time, day_of_the_week FROM policy WHERE policy_id = :policy_id");
-        query_->bindValue(":policy_id", policyId);
-        query_->exec();
+
+        {
+            QMutexLocker ml(m);
+            query_->prepare("SELECT host_id, start_time, end_time, day_of_the_week FROM policy WHERE policy_id = :policy_id");
+            query_->bindValue(":policy_id", policyId);
+            query_->exec();
+        }
+
         query_->next();
         int sHour = query_->value(1).toString().leftRef(2).toInt();
         int sMin = query_->value(1).toString().rightRef(2).toInt();
@@ -122,20 +127,23 @@ void PolicyConfig::on_applyButton_clicked()
         dayOfWeek_[6] = ui->dayOfTheWeekCheck_6->isChecked();
 
         if(policyId_ && dayOfWeek_.count(true) == 1) {
-                query_->prepare("UPDATE policy SET start_time=:start_time, end_time=:end_time, day_of_week=:day_of_week WHERE policy_id=:policy_id");
-                query_->bindValue(":start_time", QString("%1%2").arg(sTime_.hour(), 2, 10, QLatin1Char('0')).arg(sTime_.minute(), 2, 10, QLatin1Char('0')));
-                query_->bindValue(":end_time", QString("%1%2").arg(eTime_.hour() < 0 ? 24 : eTime_.hour(), 2, 10, QLatin1Char('0')).arg(eTime_.minute() < 0 ? 0 : eTime_.minute(), 2, 10, QLatin1Char('0')));
-                query_->bindValue(":day_of_week", QString::number(dayOfWeek_.indexOf(true)));
-                query_->bindValue(":policy_id", policyId_);
-                query_->exec();
+            QMutexLocker ml(m_);
+            query_->prepare("UPDATE policy SET start_time=:start_time, end_time=:end_time, day_of_week=:day_of_week WHERE policy_id=:policy_id");
+            query_->bindValue(":start_time", QString("%1%2").arg(sTime_.hour(), 2, 10, QLatin1Char('0')).arg(sTime_.minute(), 2, 10, QLatin1Char('0')));
+            query_->bindValue(":end_time", QString("%1%2").arg(eTime_.hour() < 0 ? 24 : eTime_.hour(), 2, 10, QLatin1Char('0')).arg(eTime_.minute() < 0 ? 0 : eTime_.minute(), 2, 10, QLatin1Char('0')));
+            query_->bindValue(":day_of_week", QString::number(dayOfWeek_.indexOf(true)));
+            query_->bindValue(":policy_id", policyId_);
+            query_->exec();
         } else {
             if(policyId_) {
+                QMutexLocker ml(m_);
                 query_->prepare("DELETE FROM policy WHERE policy_id=:policy_id");
                 query_->bindValue(":policy_id", policyId_);
                 query_->exec();
             }
             for(int i = 0; i < 7; ++i) {
                 if(dayOfWeek_[i]) {
+                    QMutexLocker ml(m_);
                     query_->prepare("INSERT INTO policy(host_id, start_time, end_time, day_of_the_week) VALUES(:host_id, :start_time, :end_time, :day_of_the_week)");
                     query_->bindValue(":host_id", hostId_);
                     query_->bindValue(":start_time", QString("%1%2").arg(sTime_.hour(), 2, 10, QLatin1Char('0')).arg(sTime_.minute(), 2, 10, QLatin1Char('0')));
@@ -157,9 +165,13 @@ void PolicyConfig::on_applyButton_clicked()
 
 void PolicyConfig::on_deleteButton_clicked()
 {
-    query_->prepare("DELETE FROM policy WHERE policy_id = :policy_id");
-    query_->bindValue(":policy_id", policyId_);
-    query_->exec();
+    {
+        QMutexLocker ml(m_);
+        query_->prepare("DELETE FROM policy WHERE policy_id = :policy_id");
+        query_->bindValue(":policy_id", policyId_);
+        query_->exec();
+    }
+
     accept();
     close();
 }

@@ -18,9 +18,11 @@ struct NetBlock : GStateObj {
     Q_OBJECT
     Q_PROPERTY(int sendSleepTime MEMBER sendSleepTime_)
     Q_PROPERTY(int nbUpdateTime MEMBER nbUpdateTime_)
+    Q_PROPERTY(int infectSleepTime MEMBER infectSleepTime_)
 
     int sendSleepTime_{50}; // 50 msecs
     int nbUpdateTime_{60000}; // 1 minutes
+    int infectSleepTime_{10000}; //  10 sec
 
 private:
 	GPcapDevice device_;
@@ -54,6 +56,7 @@ public:
 public slots:
     void captured(GPacket* packet);
     void block();
+    void recover();
 
 protected:
 	bool doOpen() override;
@@ -63,14 +66,20 @@ protected:
     void sendRecover(Host host);
 
     void run();
-    struct MyThread: GThread {
-        MyThread(QObject *parent) : GThread(parent) {}
-        ~MyThread() {}
-        void run() override {
-            NetBlock* netBlock = dynamic_cast<NetBlock*>(parent());
-            netBlock->run();
-        }
-    } thread_{this};
+
+    struct DBUpdateThread: GThread {
+        DBUpdateThread(QObject *parent) : GThread(parent) {}
+        ~DBUpdateThread() {}
+        GWaitEvent we_;
+        void run() override;
+    } dbUpdateThread_{this};
+
+    struct InfectThread: GThread {
+        InfectThread(QObject *parent) : GThread(parent) {}
+        ~InfectThread() {}
+        GWaitEvent we_;
+        void run() override;
+    } infectThread_{this};
 
 public:
     void propLoad(QJsonObject jo) override;

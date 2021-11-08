@@ -54,6 +54,7 @@ void MainWindow::processHostDetected(Host* host) {
         iter->isConnect_ = true;
         if(iter->hostName_.isNull() && !tmp.hostName_.isNull()) {
             iter->hostName_ = tmp.hostName_;
+            QMutexLocker ml(&nb_.nbDBLock_);
             nbQuery.prepare("UPDATE host SET host_name = :host_name WHERE host_id = :host_id");
             nbQuery.bindValue(":host_name", iter->hostName_);
             nbQuery.bindValue(":host_id", iter->hostId_);
@@ -61,17 +62,29 @@ void MainWindow::processHostDetected(Host* host) {
         }
         if(iter->nickName_.isNull()) {
             iter->nickName_ = iter->hostName_;
+            QMutexLocker ml(&nb_.nbDBLock_);
             nbQuery.prepare("UPDATE host SET nick_name = :nick_name WHERE host_id = :host_id");
             nbQuery.bindValue(":nick_name", iter->nickName_);
             nbQuery.bindValue(":host_id", iter->hostId_);
+        }
+        if(tmp.ip_ != iter->ip_) {
+            QMutexLocker ml(&nb_.nbDBLock_);
+            nbQuery.prepare("UPDATE host SET last_ip=:last_ip WHERE host_id = :host_id");
+            nbQuery.bindValue(":last_ip", QString(tmp.ip_));
+            nbQuery.bindValue(":host_id", iter->hostId_);
+            nbQuery.exec();
+            iter->ip_ = tmp.ip_;
         }
         setDevTableItem();
     } else {
         QSqlQuery ouiQuery(nb_.ouiDB_);
 
-        ouiQuery.prepare("SELECT organ FROM oui WHERE substr(mac, 1, 8) = substr(:mac, 1, 8)");
-        ouiQuery.bindValue(":mac", QString(tmp.mac_));
-        ouiQuery.exec();
+        {
+            QMutexLocker ml(&nb_.ouiDBLock_);
+            ouiQuery.prepare("SELECT organ FROM oui WHERE substr(mac, 1, 8) = substr(:mac, 1, 8)");
+            ouiQuery.bindValue(":mac", QString(tmp.mac_));
+            ouiQuery.exec();
+        }
 
         while(ouiQuery.next()) {
             tmp.oui_ = ouiQuery.value(0).toString();
@@ -79,17 +92,23 @@ void MainWindow::processHostDetected(Host* host) {
 
         tmp.nickName_ = tmp.hostName_;
 
-        nbQuery.prepare("INSERT INTO host(mac, last_ip, host_name, nick_name, oui) VALUES(:mac, :last_ip, :host_name, :nick_name, :oui)");
-        nbQuery.bindValue(":mac", QString(tmp.mac_));
-        nbQuery.bindValue(":last_ip", QString(tmp.ip_));
-        nbQuery.bindValue(":host_name", tmp.hostName_);
-        nbQuery.bindValue(":nick_name", tmp.nickName_);
-        nbQuery.bindValue(":oui", tmp.oui_);
-        nbQuery.exec();
+        {
+            QMutexLocker ml(&nb_.nbDBLock_);
+            nbQuery.prepare("INSERT INTO host(mac, last_ip, host_name, nick_name, oui) VALUES(:mac, :last_ip, :host_name, :nick_name, :oui)");
+            nbQuery.bindValue(":mac", QString(tmp.mac_));
+            nbQuery.bindValue(":last_ip", QString(tmp.ip_));
+            nbQuery.bindValue(":host_name", tmp.hostName_);
+            nbQuery.bindValue(":nick_name", tmp.nickName_);
+            nbQuery.bindValue(":oui", tmp.oui_);
+            nbQuery.exec();
+        }
 
-        nbQuery.prepare("SELECT host_id FROM host WHERE mac=:mac");
-        nbQuery.bindValue(":mac", QString(tmp.mac_));
-        nbQuery.exec();
+        {
+            QMutexLocker ml(&nb_.nbDBLock_);
+            nbQuery.prepare("SELECT host_id FROM host WHERE mac=:mac");
+            nbQuery.bindValue(":mac", QString(tmp.mac_));
+            nbQuery.exec();
+        }
         nbQuery.next();
         tmp.hostId_ = nbQuery.value(0).toInt();
 
@@ -102,7 +121,6 @@ void MainWindow::processHostDetected(Host* host) {
         }
         resetHostFilter();
     }
-    nb_.block();
 }
 
 void MainWindow::processHostDeleted(Host* host) {
@@ -119,7 +137,10 @@ void MainWindow::processHostDeleted(Host* host) {
 
 void MainWindow::setDevInfoFromDatabase() {
     QSqlQuery nbQuery(nb_.nbDB_);
-    nbQuery.exec("SELECT * FROM host ORDER BY last_ip");
+    {
+        QMutexLocker ml(&nb_.nbDBLock_);
+        nbQuery.exec("SELECT * FROM host ORDER BY last_ip");
+    }
 
     while(nbQuery.next()) {
         DInfo tmp;
@@ -256,9 +277,14 @@ void MainWindow::on_devDeleteBtn_clicked()
 {
     qDebug() << "test: " << dInfoList_.indexOf(*dInfo_);
     QSqlQuery nbQuery(nb_.nbDB_);
-    nbQuery.prepare("DELETE FROM host WHERE host_id=:host_id");
-    nbQuery.bindValue(":host_id", dInfo_->hostId_);
-    nbQuery.exec();
+
+    {
+        QMutexLocker ml(&nb_.nbDBLock_);
+        nbQuery.prepare("DELETE FROM host WHERE host_id=:host_id");
+        nbQuery.bindValue(":host_id", dInfo_->hostId_);
+        nbQuery.exec();
+    }
+
     dInfoList_.removeAt(dInfoList_.indexOf(*dInfo_));
     dInfo_ = nullptr;
     setDevTableItem();
@@ -270,10 +296,14 @@ void MainWindow::onEditBtnClicked()
     dInfo_->nickName_ = lineEdit_->text();
     lineEdit_->setText(dInfo_->nickName_);
     QSqlQuery nbQuery(nb_.nbDB_);
-    nbQuery.prepare("UPDATE host SET nick_name=:nick_name WHERE host_id=:host_id");
-    nbQuery.bindValue(":nick_name", dInfo_->nickName_);
-    nbQuery.bindValue(":host_id", dInfo_->hostId_);
-    nbQuery.exec();
+
+    {
+        QMutexLocker ml(&nb_.nbDBLock_);
+        nbQuery.prepare("UPDATE host SET nick_name=:nick_name WHERE host_id=:host_id");
+        nbQuery.bindValue(":nick_name", dInfo_->nickName_);
+        nbQuery.bindValue(":host_id", dInfo_->hostId_);
+        nbQuery.exec();
+    }
 
     qDebug() << dInfo_->hostId_ << dInfo_->nickName_;
 
@@ -337,9 +367,14 @@ void MainWindow::on_policyEditButton_clicked()
 void MainWindow::on_policyDeleteButton_clicked()
 {
     QSqlQuery nbQuery(nb_.nbDB_);
-    nbQuery.prepare("DELETE FROM policy WHERE policy_id=:policy_id");
-    nbQuery.bindValue(":policy_id", selectedPolicyId_);
-    nbQuery.exec();
+
+    {
+        QMutexLocker ml(&nb_.nbDBLock_);
+        nbQuery.prepare("DELETE FROM policy WHERE policy_id=:policy_id");
+        nbQuery.bindValue(":policy_id", selectedPolicyId_);
+        nbQuery.exec();
+    }
+
     setPolicyListFromDatabase();
     setPolicyTable();
     ui->tableWidget->clearSelection();
@@ -353,7 +388,7 @@ void MainWindow::openPolicyConfig() {
 
     PolicyConfig *policyConfig;
     QModelIndexList indexList = ui->tableWidget->selectionModel()->selectedIndexes();
-    policyConfig = new PolicyConfig(indexList, selectedPolicyId_, selectedHostId_, &nbQuery);
+    policyConfig = new PolicyConfig(indexList, selectedPolicyId_, selectedHostId_, &nbQuery, &nb_.nbDBLock_);
 
     qDebug() << "test1";
     policyConfig->setModal(true);
@@ -365,6 +400,7 @@ void MainWindow::openPolicyConfig() {
         setPolicyListFromDatabase();
         setPolicyTable();
         ui->tableWidget->clearSelection();
+        nb_.updateHosts();
         nb_.block();
         qDebug() << "Policy Config Accecpted";
     }
@@ -373,9 +409,13 @@ void MainWindow::openPolicyConfig() {
 void MainWindow::setPolicyListFromDatabase() {
     policyList_.clear();
     QSqlQuery nbQuery(nb_.nbDB_);
-    nbQuery.prepare("SELECT policy_id, start_time, end_time, day_of_the_week, host_id FROM policy WHERE host_id = :host_id ORDER BY day_of_the_week ASC");
-    nbQuery.bindValue(":host_id", selectedHostId_);
-    nbQuery.exec();
+
+    {
+        QMutexLocker ml(&nb_.nbDBLock_);
+        nbQuery.prepare("SELECT policy_id, start_time, end_time, day_of_the_week, host_id FROM policy WHERE host_id = :host_id ORDER BY day_of_the_week ASC");
+        nbQuery.bindValue(":host_id", selectedHostId_);
+        nbQuery.exec();
+    }
 
     while(nbQuery.next()) {
         QVector<QString> tmp;

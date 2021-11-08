@@ -15,7 +15,7 @@ class PolicyConfig : public QDialog
     Q_OBJECT
 
 public:
-    explicit PolicyConfig(QModelIndexList indexList, int policyId, int hostId, QSqlQuery* query, QWidget *parent = nullptr);
+    explicit PolicyConfig(QModelIndexList indexList, int policyId, int hostId, QSqlQuery* query, QMutex* m, QWidget *parent = nullptr);
     ~PolicyConfig();
 
 private slots:
@@ -39,6 +39,7 @@ private:
     QList<bool> dayOfWeek_;
 
     QSqlQuery* query_;
+    QMutex* m_;
 
     QTime sTime_;
     QTime eTime_;
