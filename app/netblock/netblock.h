@@ -6,6 +6,14 @@
 #include <QMutex>
 #include "livehostmgr.h"
 
+struct LockableSqlDatabase : QSqlDatabase {
+    QMutex m_;
+    static QSqlDatabase addDatabase(QSqlDriver* driver,
+                                    const QString& connectionName = QLatin1String(defaultConnection)) {
+        return QSqlDatabase::addDatabase(driver, connectionName);
+    }
+};
+
 struct NetBlock : GStateObj {
     Q_OBJECT
     Q_PROPERTY(int sendSleepTime MEMBER sendSleepTime_)
@@ -36,6 +44,9 @@ public:
     void updateHosts();
 
     LiveHostMgr lhm_;
+
+    QMutex nbDBLock_;
+    QMutex ouiDBLock_;
 
     QSqlDatabase nbDB_;
     QSqlDatabase ouiDB_;

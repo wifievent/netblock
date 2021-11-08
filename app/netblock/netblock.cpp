@@ -16,35 +16,51 @@ bool NetBlock::dbCheck() {
     QSqlQuery ouiQuery(ouiDB_);
     QString result;
 
-    nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'host'");
+    {
+//        QMutexLocker ml(&nbDB_.m_);
+        nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'host'");
+    }
     nbQuery.next();
     result = nbQuery.value(0).toString();
     if(result.compare("host")) {
         qDebug() << QString("Create host table");
+//        QMutexLocker ml(&nbDB_.m_);
         nbQuery.exec("CREATE TABLE host (host_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, mac CHAR(17) NOT NULL, last_ip VARCHAR(15) NULL, host_name VARCHAR(30) NULL, nick_name VARCHAR(30) NULL, oui VARCHAR(20) NULL)");
     }
 
-    nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'policy'");
+    {
+//        QMutexLocker ml(&nbDB_.m_);
+        nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'policy'");
+    }
     nbQuery.next();
     result = nbQuery.value(0).toString();
     if(result.compare("policy")) {
         qDebug() << QString("Create policy table");
+//        QMutexLocker ml(&nbDB_.m_);
         nbQuery.exec("CREATE TABLE policy (policy_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, host_id INTEGER NOT NULL, start_time CHAR(4) NOT NULL, end_time CHAR(4) NOT NULL, day_of_the_week TINYINT NOT NULL)");
     }
 
-    nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'block_host'");
+    {
+//        QMutexLocker ml(&nbDB_.m_);
+        nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'block_host'");
+    }
     nbQuery.next();
     result = nbQuery.value(0).toString();
     if(result.compare("block_host")) {
         qDebug() << QString("Create block_host view");
+//        QMutexLocker ml(&nbDB_.m_);
         nbQuery.exec("CREATE VIEW block_host as SELECT mac, last_ip, host_name FROM host WHERE host_id in (SELECT host_id from policy where strftime(\"%H%M\", 'now', 'localtime') BETWEEN start_time AND end_time AND strftime(\"%w\", 'now', 'localtime') = day_of_the_week)");
     }
 
-    ouiQuery.exec("SELECT name FROM sqlite_master WHERE name = 'oui'");
+    {
+//        QMutexLocker ml(&ouiDB_.m_);
+        ouiQuery.exec("SELECT name FROM sqlite_master WHERE name = 'oui'");
+    }
     ouiQuery.next();
     result = ouiQuery.value(0).toString();
     if(result.compare("oui")) {
         qDebug() << QString("Create oui table");
+//        QMutexLocker ml(&ouiDBLock_.m_);
         ouiQuery.exec("CREATE TABLE oui (mac CHAR(20) NOT NULL PRIMARY KEY, organ VARCHAR(64) NOT NULL)");
 
         QFile file("manuf_rep.txt");
@@ -59,10 +75,13 @@ bool NetBlock::dbCheck() {
         while (!fileStream.atEnd()) {
             getLine = fileStream.readLine();
             QStringList ouiResult = getLine.split('\t');
-            ouiQuery.prepare("INSERT INTO oui VALUES(:mac, :organ)");
-            ouiQuery.bindValue(":mac", ouiResult.at(0));
-            ouiQuery.bindValue(":organ", ouiResult.at(1));
-            ouiQuery.exec();
+            {
+//                QMutexLocker ml(&ouiDB_.m_);
+                ouiQuery.prepare("INSERT INTO oui VALUES(:mac, :organ)");
+                ouiQuery.bindValue(":mac", ouiResult.at(0));
+                ouiQuery.bindValue(":organ", ouiResult.at(1));
+                ouiQuery.exec();
+            }
         }
     }
 
