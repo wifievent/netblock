@@ -5,25 +5,31 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    QJsonObject jo = GJson::loadFromFile();
-    jo["NetBlock"] >> nb_;
-    jo["NetBlock"] << nb_;
-    GJson::saveToFile(jo);
-    openCheck = nb_.open();
-
-    ui->setupUi(this);
+	ui->setupUi(this);
 
     setDevInfoFromDatabase();
     setDevTableWidget();
     initDevWidget();
 
+	QJsonObject jo = GJson::loadFromFile();
+	jo["MainWindow"] >> *this;
+	jo["NetBlock"] >> nb_;
+
     connect(&nb_.lhm_, &LiveHostMgr::hostDetected, this, &MainWindow::processHostDetected, Qt::BlockingQueuedConnection);
     connect(&nb_.lhm_, &LiveHostMgr::hostDeleted, this, &MainWindow::processHostDeleted, Qt::BlockingQueuedConnection);
+
+	openCheck = nb_.open();
 }
 
 MainWindow::~MainWindow()
 {
     nb_.close();
+
+	QJsonObject jo = GJson::loadFromFile();
+	jo["MainWindow"] << *this;
+	jo["NetBlock"] << nb_;
+	GJson::saveToFile(jo);
+
     delete ui;
 }
 
@@ -131,8 +137,8 @@ void MainWindow::setDevTableWidget() {
     ui->devTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->devTable->setFocusPolicy(Qt::NoFocus);
     ui->devTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->devTable->resizeColumnToContents(0);
-    ui->devTable->resizeColumnToContents(1);
+	ui->devTable->resizeColumnToContents(0);
+	//ui->devTable->resizeColumnToContents(1); // gilgil temp
     ui->devTable->horizontalHeader()->setStretchLastSection(true);
 }
 
@@ -425,4 +431,14 @@ void MainWindow::setPolicyTable() {
             setItemPolicy(0, column, iter->getPolicyId(), span);
         }
     }
+}
+
+void MainWindow::propLoad(QJsonObject jo) {
+	jo["rect"] >> GJson::rect(this);
+	jo["tableWidget"] >> GJson::columnSizes(ui->devTable);
+}
+
+void MainWindow::propSave(QJsonObject& jo) {
+	jo["rect"] << GJson::rect(this);
+	jo["tableWidget"] << GJson::columnSizes(ui->devTable);
 }

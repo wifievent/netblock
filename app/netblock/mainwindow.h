@@ -11,13 +11,11 @@
 #include "policyobj.h"
 #include "policyconfig.h"
 
-#include <QObject>
-
 namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow, GProp
 {
     Q_OBJECT
 
@@ -84,6 +82,9 @@ private:
     void resetPolicyTable();
     void setItemPolicy(int row, int column, int policyId, int span);
     void setPolicyTable();
+
+	void propLoad(QJsonObject jo) override;
+	void propSave(QJsonObject& jo) override;
 };
 
 #endif // MAINWINDOW_H
