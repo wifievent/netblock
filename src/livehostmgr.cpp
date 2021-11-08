@@ -114,7 +114,7 @@ void LiveHostMgr::captured(GPacket* packet) {
 	GEthHdr* ethHdr = ethPacket->ethHdr_;
     GMac smac = ethHdr->smac();
 
-	if (smac == myMac_) return;
+    if (smac == myMac_) return;
 
 	if (processDhcp(ethPacket)) return;
 
@@ -122,6 +122,7 @@ void LiveHostMgr::captured(GPacket* packet) {
 	if (ethHdr->type() == GEthHdr::Arp) {
 		GArpHdr* arpHdr = ethPacket->arpHdr_;
 		GIp sip = arpHdr->sip();
+        if(sip != device_.intf()->gateway())
 		{
 			QMutexLocker ml(&hosts_.m_);
 			HostMap::iterator it = hosts_.find(smac);

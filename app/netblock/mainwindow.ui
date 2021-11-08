@@ -86,7 +86,7 @@
                 </column>
                 <column>
                  <property name="text">
-                  <string>Nick Name</string>
+                  <string>Name</string>
                  </property>
                 </column>
                </widget>

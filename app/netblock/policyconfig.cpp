@@ -99,7 +99,7 @@ void PolicyConfig::on_eHourBox_currentIndexChanged(int index)
 {
 	(void)index;
 
-    eTime_ = QTime(ui->eHourBox->currentText().toInt(), eTime_.minute());
+    eTime_ = QTime(ui->eHourBox->currentText().toInt(), eTime_.minute() < 0 ? ui->eMinBox->currentText().toInt() : eTime_.minute());
 }
 
 void PolicyConfig::on_eMinBox_currentIndexChanged(int index)

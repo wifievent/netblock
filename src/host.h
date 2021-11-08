@@ -14,6 +14,7 @@ struct Host {
 	QString hostName_;
 	QString nickName_;
 	qint64 lastAccess_{0};
+    QString defaultName();
 };
 
 struct HostMap : QHash<GMac, Host> {

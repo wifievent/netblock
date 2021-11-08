@@ -7,18 +7,22 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	ui->setupUi(this);
 
-    setDevInfoFromDatabase();
-    setDevTableWidget();
-    initDevWidget();
-
-	QJsonObject jo = GJson::loadFromFile();
-	jo["MainWindow"] >> *this;
-	jo["NetBlock"] >> nb_;
-
     connect(&nb_.lhm_, &LiveHostMgr::hostDetected, this, &MainWindow::processHostDetected, Qt::BlockingQueuedConnection);
     connect(&nb_.lhm_, &LiveHostMgr::hostDeleted, this, &MainWindow::processHostDeleted, Qt::BlockingQueuedConnection);
 
-	openCheck = nb_.open();
+    QJsonObject jo = GJson::loadFromFile();
+    jo["MainWindow"] >> *this;
+    jo["NetBlock"] >> nb_;
+
+    GThreadMgr::suspendStart();
+
+    openCheck = nb_.open();
+
+    GThreadMgr::resumeStart();
+
+    setDevInfoFromDatabase();
+    setDevTableWidget();
+    initDevWidget();
 }
 
 MainWindow::~MainWindow()
@@ -127,6 +131,7 @@ void MainWindow::setDevInfoFromDatabase() {
 
         dInfoList_.append(tmp);
     }
+
 }
 
 void MainWindow::setDevTableWidget() {
@@ -158,7 +163,7 @@ void MainWindow::setDevTableItem() {
             ui->devTable->setCellWidget(i, 0, btn);
         }
         ui->devTable->setItem(i, 1, new QTableWidgetItem(QString(iter->ip_)));
-        ui->devTable->setItem(i, 2, new QTableWidgetItem(iter->nickName_));
+        ui->devTable->setItem(i, 2, new QTableWidgetItem(iter->defaultName()));
     }
     resetHostFilter();
 }
@@ -177,7 +182,7 @@ void MainWindow::activateBtn() {
 void MainWindow::resetHostFilter() {
     ui->hostFilter->clear();
     for(DInfoList::iterator iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter) {
-        ui->hostFilter->addItem(iter->nickName_.isNull() ? QString(iter->ip_) : iter->nickName_, iter->hostId_);
+        ui->hostFilter->addItem(iter->defaultName(), iter->hostId_);
     }
     setHostFilter();
 }

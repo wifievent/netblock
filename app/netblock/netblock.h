@@ -48,7 +48,6 @@ protected:
 	bool doOpen() override;
 	bool doClose() override;
 
-    void sendFindGatewayPacket();
     void sendInfect(Host host);
     void sendRecover(Host host);
 
