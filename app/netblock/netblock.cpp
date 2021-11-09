@@ -123,6 +123,12 @@ bool NetBlock::doClose() {
     we_.wakeAll();
     dbUpdateThread_.we_.wakeAll();
     infectThread_.we_.wakeAll();
+    if (!dbUpdateThread_.wait() ) {
+        qCritical() << "thread_.wait return false";
+    }
+    if (!infectThread_.wait() ) {
+        qCritical() << "thread_.wait return false";
+    }
 
     ouiDB_.close();
     nbDB_.close();
