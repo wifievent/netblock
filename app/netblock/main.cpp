@@ -2,31 +2,33 @@
 
 #include <GApp>
 
-const char* version()
+const char *version()
 {
     return
 #ifdef _DEBUG
 #include "../../version.txt"
-    " Debug Build(" __DATE__ " " __TIME__ ")";
+        " Debug Build(" __DATE__ " " __TIME__ ")";
 #else // RELEASE
 #include "../../version.txt"
-    " Release Build(" __DATE__ " " __TIME__ ")";
+        " Release Build(" __DATE__ " " __TIME__ ")";
 #endif // _DEBUG
 }
 
 int main(int argc, char *argv[])
 {
     qDebug() << "NetBlock Started" << version();
-	GApp a(argc, argv);
+    GApp a(argc, argv);
 
     QIcon icon(":/image/logo/logo.ico");
     a.setWindowIcon(icon);
 
     MainWindow m;
-    if(!m.openCheck) {
+    if (!m.openCheck)
+    {
         qDebug() << QString("NB Do not open");
     }
-    else {
+    else
+    {
         m.show();
         a.exec();
     }

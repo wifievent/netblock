@@ -1,23 +1,24 @@
 #include "policyconfig.h"
 #include "ui_policyconfig.h"
 
-PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, QSqlQuery *query, QMutex* m, QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::PolicyConfig)
+PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, QSqlQuery *query, QMutex *m, QWidget *parent) : QDialog(parent),
+                                                                                                                                ui(new Ui::PolicyConfig)
 {
     ui->setupUi(this);
 
-	ui->sHourBox->setEditable(true);
-	ui->sMinBox->setEditable(true);
-	ui->eHourBox->setEditable(true);
-	ui->eMinBox->setEditable(true);
+    ui->sHourBox->setEditable(true);
+    ui->sMinBox->setEditable(true);
+    ui->eHourBox->setEditable(true);
+    ui->eMinBox->setEditable(true);
 
-    qDebug() <<"PolicyId: " << policyId;
+    qDebug() << "PolicyId: " << policyId;
 
-    if(policyId == 0) {
+    if (policyId == 0)
+    {
         this->setWindowTitle("New");
     }
-    else {
+    else
+    {
         this->setWindowTitle(QString::number(policyId));
     }
 
@@ -27,23 +28,29 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
     m_ = m;
 
     qDebug() << "TESTESTESTEST" << hostId << policyId;
-    for(int i = 0; i < 7; ++i) {
+    for (int i = 0; i < 7; ++i)
+    {
         dayOfWeek_.append(false);
     }
 
     QTime now = QTime::currentTime();
     sTime_ = QTime(now.hour(), now.minute() - now.minute() % 10);
     eTime_ = sTime_.addSecs(600);
-    if(!policyId) {
-        for(QModelIndexList::iterator iter = indexList.begin(); iter != indexList.end(); ++iter) {
+    if (!policyId)
+    {
+        for (QModelIndexList::iterator iter = indexList.begin(); iter != indexList.end(); ++iter)
+        {
             dayOfWeek_[iter->column()] = true;
         }
         sTime_ = QTime(indexList.constFirst().row(), 0);
-		eTime_ = QTime(indexList.constLast().row() + 1, 0);
-        if(indexList.constLast().row() + 1 == 24) {
-			eTime_ = QTime(23, 59);
+        eTime_ = QTime(indexList.constLast().row() + 1, 0);
+        if (indexList.constLast().row() + 1 == 24)
+        {
+            eTime_ = QTime(23, 59);
         }
-    } else {
+    }
+    else
+    {
         ui->deleteButton->setEnabled(true);
 
         {
@@ -62,17 +69,15 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
             dayOfWeek_[query_->value(3).toInt()] = true;
 
             hostId_ = query->value(0).toInt();
-
         }
 
-        qDebug() << "else in"<< sTime_.hour() << sTime_.minute() << eTime_.hour() << eTime_.minute();
+        qDebug() << "else in" << sTime_.hour() << sTime_.minute() << eTime_.hour() << eTime_.minute();
     }
 
-	ui->sHourBox->setCurrentText(QString::number(sTime_.hour()));
-	ui->sMinBox->setCurrentText(QString::number(sTime_.minute()));
+    ui->sHourBox->setCurrentText(QString::number(sTime_.hour()));
+    ui->sMinBox->setCurrentText(QString::number(sTime_.minute()));
     ui->eHourBox->setCurrentText(QString::number(eTime_.hour() < 0 ? 24 : eTime_.hour()));
     ui->eMinBox->setCurrentText(QString::number(eTime_.minute() < 0 ? 0 : eTime_.minute()));
-
 
     ui->dayOfTheWeekCheck_0->setChecked(dayOfWeek_[0]);
     ui->dayOfTheWeekCheck_1->setChecked(dayOfWeek_[1]);
@@ -82,7 +87,7 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
     ui->dayOfTheWeekCheck_5->setChecked(dayOfWeek_[5]);
     ui->dayOfTheWeekCheck_6->setChecked(dayOfWeek_[6]);
 
-    qDebug() << "end "<< sTime_.hour() << sTime_.minute() << eTime_.hour() << eTime_.minute();
+    qDebug() << "end " << sTime_.hour() << sTime_.minute() << eTime_.hour() << eTime_.minute();
 }
 
 PolicyConfig::~PolicyConfig()
@@ -92,30 +97,28 @@ PolicyConfig::~PolicyConfig()
 
 void PolicyConfig::on_sHourBox_currentIndexChanged(int index)
 {
-	(void)index;
+    (void)index;
 
     sTime_ = QTime(ui->sHourBox->currentText().toInt(), sTime_.minute());
 }
 
-
 void PolicyConfig::on_sMinBox_currentIndexChanged(int index)
 {
-	(void)index;
+    (void)index;
 
     sTime_ = QTime(sTime_.hour(), ui->sMinBox->currentText().toInt());
 }
 
-
 void PolicyConfig::on_eHourBox_currentIndexChanged(int index)
 {
-	(void)index;
+    (void)index;
 
     eTime_ = QTime(ui->eHourBox->currentText().toInt(), eTime_.minute() < 0 ? ui->eMinBox->currentText().toInt() : eTime_.minute());
 }
 
 void PolicyConfig::on_eMinBox_currentIndexChanged(int index)
 {
-	(void)index;
+    (void)index;
 
     eTime_ = QTime(eTime_.hour(), ui->eMinBox->currentText().toInt());
 }
@@ -123,7 +126,8 @@ void PolicyConfig::on_eMinBox_currentIndexChanged(int index)
 void PolicyConfig::on_applyButton_clicked()
 {
     qDebug() << sTime_.hour() << sTime_.minute() << eTime_.hour() << eTime_.minute();
-    if(sTime_ < eTime_ || (ui->eHourBox->currentText().toInt() == 24 && ui->eMinBox->currentText().toInt() == 0)) {
+    if (sTime_ < eTime_ || (ui->eHourBox->currentText().toInt() == 24 && ui->eMinBox->currentText().toInt() == 0))
+    {
         dayOfWeek_[0] = ui->dayOfTheWeekCheck_0->isChecked();
         dayOfWeek_[1] = ui->dayOfTheWeekCheck_1->isChecked();
         dayOfWeek_[2] = ui->dayOfTheWeekCheck_2->isChecked();
@@ -132,7 +136,8 @@ void PolicyConfig::on_applyButton_clicked()
         dayOfWeek_[5] = ui->dayOfTheWeekCheck_5->isChecked();
         dayOfWeek_[6] = ui->dayOfTheWeekCheck_6->isChecked();
 
-        if(policyId_ && dayOfWeek_.count(true) == 1) {
+        if (policyId_ && dayOfWeek_.count(true) == 1)
+        {
             QMutexLocker ml(m_);
             query_->prepare("UPDATE policy SET start_time=:start_time, end_time=:end_time, day_of_the_week=:day_of_the_week WHERE policy_id=:policy_id");
             query_->bindValue(":start_time", QString("%1%2").arg(sTime_.hour(), 2, 10, QLatin1Char('0')).arg(sTime_.minute(), 2, 10, QLatin1Char('0')));
@@ -140,15 +145,20 @@ void PolicyConfig::on_applyButton_clicked()
             query_->bindValue(":day_of_the_week", QString::number(dayOfWeek_.indexOf(true)));
             query_->bindValue(":policy_id", policyId_);
             query_->exec();
-        } else {
-            if(policyId_) {
+        }
+        else
+        {
+            if (policyId_)
+            {
                 QMutexLocker ml(m_);
                 query_->prepare("DELETE FROM policy WHERE policy_id=:policy_id");
                 query_->bindValue(":policy_id", policyId_);
                 query_->exec();
             }
-            for(int i = 0; i < 7; ++i) {
-                if(dayOfWeek_[i]) {
+            for (int i = 0; i < 7; ++i)
+            {
+                if (dayOfWeek_[i])
+                {
                     QMutexLocker ml(m_);
                     query_->prepare("INSERT INTO policy(host_id, start_time, end_time, day_of_the_week) VALUES(:host_id, :start_time, :end_time, :day_of_the_week)");
                     query_->bindValue(":host_id", hostId_);
@@ -161,12 +171,15 @@ void PolicyConfig::on_applyButton_clicked()
         }
         accept();
         close();
-    } else if(eTime_.hour() < 0) {
+    }
+    else if (eTime_.hour() < 0)
+    {
         QMessageBox::warning(this, "Warning", "You Check EndTime Over than 24:00");
-    } else {
+    }
+    else
+    {
         QMessageBox::warning(this, "Warning", "EndTime must be greater then StartTime");
     }
-
 }
 
 void PolicyConfig::on_deleteButton_clicked()
@@ -186,5 +199,3 @@ void PolicyConfig::on_cancelButton_clicked()
 {
     close();
 }
-
-

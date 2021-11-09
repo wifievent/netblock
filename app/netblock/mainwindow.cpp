@@ -1,11 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
+                                          ui(new Ui::MainWindow)
 {
-	ui->setupUi(this);
+    ui->setupUi(this);
 
     connect(&nb_.lhm_, &LiveHostMgr::hostDetected, this, &MainWindow::processHostDetected, Qt::BlockingQueuedConnection);
     connect(&nb_.lhm_, &LiveHostMgr::hostDeleted, this, &MainWindow::processHostDeleted, Qt::BlockingQueuedConnection);
@@ -29,30 +28,35 @@ MainWindow::~MainWindow()
 {
     nb_.close();
 
-	QJsonObject jo = GJson::loadFromFile();
-	jo["MainWindow"] << *this;
-	jo["NetBlock"] << nb_;
-	GJson::saveToFile(jo);
+    QJsonObject jo = GJson::loadFromFile();
+    jo["MainWindow"] << *this;
+    jo["NetBlock"] << nb_;
+    GJson::saveToFile(jo);
 
     delete ui;
 }
 
-void MainWindow::processHostDetected(Host* host) {
+void MainWindow::processHostDetected(Host *host)
+{
     qDebug() << QString("host detected %1 %2 %3 %4").arg(QString(host->mac_), QString(host->ip_), host->hostName_, host->nickName_);
     DInfo tmp(*host);
     tmp.isConnect_ = true;
 
     DInfoList::iterator iter;
-    for(iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter) {
-        if(iter->mac_ == tmp.mac_) {
+    for (iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter)
+    {
+        if (iter->mac_ == tmp.mac_)
+        {
             break;
         }
     }
 
     QSqlQuery nbQuery(nb_.nbDB_);
-    if(iter != dInfoList_.end()) {
+    if (iter != dInfoList_.end())
+    {
         iter->isConnect_ = true;
-        if(iter->hostName_.isNull() && !tmp.hostName_.isNull()) {
+        if (iter->hostName_.isNull() && !tmp.hostName_.isNull())
+        {
             iter->hostName_ = tmp.hostName_;
             QMutexLocker ml(&nb_.nbDBLock_);
             nbQuery.prepare("UPDATE host SET host_name = :host_name WHERE host_id = :host_id");
@@ -60,7 +64,8 @@ void MainWindow::processHostDetected(Host* host) {
             nbQuery.bindValue(":host_id", iter->hostId_);
             nbQuery.exec();
         }
-        if(iter->nickName_.isNull()) {
+        if (iter->nickName_.isNull())
+        {
             iter->nickName_ = iter->hostName_;
             QMutexLocker ml(&nb_.nbDBLock_);
             nbQuery.prepare("UPDATE host SET nick_name = :nick_name WHERE host_id = :host_id");
@@ -68,7 +73,8 @@ void MainWindow::processHostDetected(Host* host) {
             nbQuery.bindValue(":host_id", iter->hostId_);
             nbQuery.exec();
         }
-        if(tmp.ip_ != iter->ip_) {
+        if (tmp.ip_ != iter->ip_)
+        {
             QMutexLocker ml(&nb_.nbDBLock_);
             nbQuery.prepare("UPDATE host SET last_ip=:last_ip WHERE host_id = :host_id");
             nbQuery.bindValue(":last_ip", QString(tmp.ip_));
@@ -77,7 +83,9 @@ void MainWindow::processHostDetected(Host* host) {
             iter->ip_ = tmp.ip_;
         }
         setDevTableItem();
-    } else {
+    }
+    else
+    {
         QSqlQuery ouiQuery(nb_.ouiDB_);
 
         {
@@ -86,10 +94,10 @@ void MainWindow::processHostDetected(Host* host) {
             ouiQuery.bindValue(":mac", QString(tmp.mac_));
             ouiQuery.exec();
 
-            while(ouiQuery.next()) {
+            while (ouiQuery.next())
+            {
                 tmp.oui_ = ouiQuery.value(0).toString();
             }
-
         }
 
         tmp.nickName_ = tmp.hostName_;
@@ -116,21 +124,26 @@ void MainWindow::processHostDetected(Host* host) {
         }
 
         dInfoList_.append(tmp);
-        if(dInfoList_.length() <= 1) {
+        if (dInfoList_.length() <= 1)
+        {
             setDevTableWidget();
         }
-        else {
+        else
+        {
             setDevTableItem();
         }
         resetHostFilter();
     }
 }
 
-void MainWindow::processHostDeleted(Host* host) {
+void MainWindow::processHostDeleted(Host *host)
+{
     qDebug() << QString("host deleted %1 %2 %3 %4").arg(QString(host->mac_), QString(host->ip_), host->hostName_, host->nickName_);
     DInfo tmp(*host);
-    for(DInfoList::iterator iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter) {
-        if(tmp.mac_ == iter->mac_) {
+    for (DInfoList::iterator iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter)
+    {
+        if (tmp.mac_ == iter->mac_)
+        {
             iter->isConnect_ = false;
             break;
         }
@@ -138,13 +151,15 @@ void MainWindow::processHostDeleted(Host* host) {
     setDevTableItem();
 }
 
-void MainWindow::setDevInfoFromDatabase() {
+void MainWindow::setDevInfoFromDatabase()
+{
     QSqlQuery nbQuery(nb_.nbDB_);
     {
         QMutexLocker ml(&nb_.nbDBLock_);
         nbQuery.exec("SELECT * FROM host ORDER BY last_ip");
 
-        while(nbQuery.next()) {
+        while (nbQuery.next())
+        {
             DInfo tmp;
             tmp.hostId_ = nbQuery.value(0).toInt();
             tmp.mac_ = GMac(nbQuery.value(1).toString());
@@ -155,12 +170,11 @@ void MainWindow::setDevInfoFromDatabase() {
 
             dInfoList_.append(tmp);
         }
-
     }
-
 }
 
-void MainWindow::setDevTableWidget() {
+void MainWindow::setDevTableWidget()
+{
 
     setDevTableItem();
 
@@ -168,21 +182,26 @@ void MainWindow::setDevTableWidget() {
     ui->devTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->devTable->setFocusPolicy(Qt::NoFocus);
     ui->devTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-	ui->devTable->resizeColumnToContents(0);
+    ui->devTable->resizeColumnToContents(0);
     ui->devTable->horizontalHeader()->setStretchLastSection(true);
 }
 
-void MainWindow::setDevTableItem() {
+void MainWindow::setDevTableItem()
+{
     ui->devTable->setRowCount(dInfoList_.size());
 
     int i = 0;
-    for(DInfoList::iterator iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter, ++i) {
-        if(iter->isConnect_) {
+    for (DInfoList::iterator iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter, ++i)
+    {
+        if (iter->isConnect_)
+        {
             QPushButton *btn = new QPushButton();
             btn->setParent(ui->devTable);
             btn->setStyleSheet("QPushButton { margin: 4px; background-color: blue; width: 20px; border-color: black; border-width: 1px; border-radius: 10px; }");
             ui->devTable->setCellWidget(i, 0, btn);
-        } else {
+        }
+        else
+        {
             QPushButton *btn = new QPushButton();
             btn->setParent(ui->devTable);
             btn->setStyleSheet("QPushButton { margin: 4px; background-color: gray; width: 20px; border-color: black; border-width: 1px; border-radius: 10px; }");
@@ -194,20 +213,24 @@ void MainWindow::setDevTableItem() {
     resetHostFilter();
 }
 
-void MainWindow::initDevWidget() {
+void MainWindow::initDevWidget()
+{
     ui->devInfo->clear();
     ui->devPolicyBtn->setEnabled(false);
     ui->devDeleteBtn->setEnabled(false);
 }
 
-void MainWindow::activateBtn() {
+void MainWindow::activateBtn()
+{
     ui->devPolicyBtn->setEnabled(true);
     ui->devDeleteBtn->setEnabled(true);
 }
 
-void MainWindow::resetHostFilter() {
+void MainWindow::resetHostFilter()
+{
     ui->hostFilter->clear();
-    for(DInfoList::iterator iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter) {
+    for (DInfoList::iterator iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter)
+    {
         ui->hostFilter->addItem(iter->defaultName(), iter->hostId_);
     }
     setHostFilter();
@@ -215,7 +238,7 @@ void MainWindow::resetHostFilter() {
 
 void MainWindow::on_devTable_cellClicked(int row, int column)
 {
-	(void)column;
+    (void)column;
 
     ui->devInfo->clear();
     dInfo_ = &dInfoList_[row];
@@ -250,13 +273,20 @@ void MainWindow::setListWidgetItem(QString str)
     QHBoxLayout *layout = new QHBoxLayout();
     QLabel *key_label = new QLabel(str + "\t");
     QLabel *val_label = new QLabel();
-    if(str == "OUI") {
+    if (str == "OUI")
+    {
         val_label->setText(dInfo_->oui_);
-    }else if(str == "MAC") {
+    }
+    else if (str == "MAC")
+    {
         val_label->setText(QString(dInfo_->mac_));
-    }else if(str == "IP") {
+    }
+    else if (str == "IP")
+    {
         val_label->setText(QString(dInfo_->ip_));
-    }else if(str == "Host_Name") {
+    }
+    else if (str == "Host_Name")
+    {
         val_label->setText(dInfo_->hostName_);
     }
     layout->addWidget(key_label);
@@ -315,22 +345,26 @@ void MainWindow::onEditBtnClicked()
     resetHostFilter();
 }
 
-void MainWindow::setHostFilter() {
+void MainWindow::setHostFilter()
+{
     ui->hostFilter->setCurrentIndex(ui->hostFilter->findData(selectedHostId_));
 }
 
 void MainWindow::on_tableWidget_itemSelectionChanged()
 {
     QModelIndexList indexList = ui->tableWidget->selectionModel()->selectedIndexes();
-    if (indexList.size() > 1 && indexList.constFirst().column() != indexList.constLast().column()) {
+    if (indexList.size() > 1 && indexList.constFirst().column() != indexList.constLast().column())
+    {
         ui->policyEditButton->setEnabled(true);
     }
-    if (!indexList.isEmpty()) {
+    if (!indexList.isEmpty())
+    {
         ui->policyDeleteButton->setDisabled(true);
         ui->policyEditButton->setDisabled(true);
         ui->policyAddButton->setEnabled(true);
         QTableWidgetItem *firstItem = ui->tableWidget->item(indexList.constFirst().row(), indexList.constFirst().column());
-        if (firstItem != nullptr) {
+        if (firstItem != nullptr)
+        {
             selectedPolicyId_ = firstItem->data(Qt::UserRole).toInt();
             ui->policyEditButton->setEnabled(true);
             ui->policyDeleteButton->setEnabled(true);
@@ -345,9 +379,10 @@ void MainWindow::on_tableWidget_itemSelectionChanged()
 
 void MainWindow::on_hostFilter_currentIndexChanged(int index)
 {
-	(void)index;
+    (void)index;
 
-    if(ui->hostFilter->count() == dInfoList_.length()) {
+    if (ui->hostFilter->count() == dInfoList_.length())
+    {
         selectedHostId_ = ui->hostFilter->currentData().toInt();
         setPolicyListFromDatabase();
         setPolicyTable();
@@ -389,7 +424,8 @@ void MainWindow::on_policyDeleteButton_clicked()
     nb_.block();
 }
 
-void MainWindow::openPolicyConfig() {
+void MainWindow::openPolicyConfig()
+{
     QSqlQuery nbQuery(nb_.nbDB_);
 
     selectedHostId_ = ui->hostFilter->currentData().toInt();
@@ -401,10 +437,10 @@ void MainWindow::openPolicyConfig() {
     qDebug() << "test1";
     policyConfig->setModal(true);
 
-
     int result = policyConfig->exec();
 
-    if (result == QDialog::Accepted) {
+    if (result == QDialog::Accepted)
+    {
         setPolicyListFromDatabase();
         setPolicyTable();
         ui->tableWidget->clearSelection();
@@ -414,7 +450,8 @@ void MainWindow::openPolicyConfig() {
     }
 }
 
-void MainWindow::setPolicyListFromDatabase() {
+void MainWindow::setPolicyListFromDatabase()
+{
     policyList_.clear();
     QSqlQuery nbQuery(nb_.nbDB_);
 
@@ -424,7 +461,8 @@ void MainWindow::setPolicyListFromDatabase() {
         nbQuery.bindValue(":host_id", selectedHostId_);
         nbQuery.exec();
 
-        while(nbQuery.next()) {
+        while (nbQuery.next())
+        {
             QVector<QString> tmp;
             tmp.append(nbQuery.value(0).toString());
             tmp.append(nbQuery.value(1).toString());
@@ -437,13 +475,15 @@ void MainWindow::setPolicyListFromDatabase() {
 
             policyList_.append(tmpObj);
         }
-
     }
 }
 
-void MainWindow::resetPolicyTable() {
-    for(int i = 0; i < ui->tableWidget->rowCount(); ++i) {
-        for (int j = 0; j < ui->tableWidget->columnCount(); ++j) {
+void MainWindow::resetPolicyTable()
+{
+    for (int i = 0; i < ui->tableWidget->rowCount(); ++i)
+    {
+        for (int j = 0; j < ui->tableWidget->columnCount(); ++j)
+        {
             ui->tableWidget->setItem(i, j, nullptr);
             ui->tableWidget->setColumnWidth(j, 100);
             ui->tableWidget->clearSpans();
@@ -451,8 +491,10 @@ void MainWindow::resetPolicyTable() {
     }
 }
 
-void MainWindow::setItemPolicy(int row, int column, int policyId, int span) {
-    if (span > 1) {
+void MainWindow::setItemPolicy(int row, int column, int policyId, int span)
+{
+    if (span > 1)
+    {
         ui->tableWidget->setSpan(row, column, span, 1);
     }
 
@@ -462,9 +504,11 @@ void MainWindow::setItemPolicy(int row, int column, int policyId, int span) {
     itm->setData(Qt::UserRole, policyId);
 }
 
-void MainWindow::setPolicyTable() {
+void MainWindow::setPolicyTable()
+{
     resetPolicyTable();
-    for(QVector<PolicyObj>::iterator iter = policyList_.begin(); iter != policyList_.end(); ++iter) {
+    for (QVector<PolicyObj>::iterator iter = policyList_.begin(); iter != policyList_.end(); ++iter)
+    {
         int startHour = iter->getStartTime().leftRef(2).toInt();
         int startMin = iter->getStartTime().rightRef(2).toInt();
         int endHour = iter->getEndTime().leftRef(2).toInt();
@@ -474,10 +518,13 @@ void MainWindow::setPolicyTable() {
         int endRow = endHour + endMin / MINUTE::HOUR;
         int column = iter->getDayOfTheWeek();
         int span = 0;
-        if (iter->getStartTime() <= iter->getEndTime()) {
+        if (iter->getStartTime() <= iter->getEndTime())
+        {
             span = endRow - startRow;
             setItemPolicy(startRow, column, iter->getPolicyId(), span);
-        } else {
+        }
+        else
+        {
             span = 24 - startRow;
             setItemPolicy(startRow, column, iter->getPolicyId(), span);
 
@@ -487,12 +534,14 @@ void MainWindow::setPolicyTable() {
     }
 }
 
-void MainWindow::propLoad(QJsonObject jo) {
-	jo["rect"] >> GJson::rect(this);
-	jo["tableWidget"] >> GJson::columnSizes(ui->devTable);
+void MainWindow::propLoad(QJsonObject jo)
+{
+    jo["rect"] >> GJson::rect(this);
+    jo["tableWidget"] >> GJson::columnSizes(ui->devTable);
 }
 
-void MainWindow::propSave(QJsonObject& jo) {
-	jo["rect"] << GJson::rect(this);
-	jo["tableWidget"] << GJson::columnSizes(ui->devTable);
+void MainWindow::propSave(QJsonObject &jo)
+{
+    jo["rect"] << GJson::rect(this);
+    jo["tableWidget"] << GJson::columnSizes(ui->devTable);
 }
