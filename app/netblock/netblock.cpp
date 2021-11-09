@@ -52,40 +52,6 @@ bool NetBlock::dbCheck() {
         nbQuery.exec("CREATE VIEW block_host as SELECT mac, last_ip, host_name FROM host WHERE host_id in (SELECT host_id from policy where strftime(\"%H%M\", 'now', 'localtime') BETWEEN start_time AND end_time AND strftime(\"%w\", 'now', 'localtime') = day_of_the_week)");
     }
 
-    {
-        QMutexLocker ml(&nbDBLock_);
-        ouiQuery.exec("SELECT name FROM sqlite_master WHERE name = 'oui'");
-    }
-    ouiQuery.next();
-    result = ouiQuery.value(0).toString();
-    if(result.compare("oui")) {
-        qDebug() << QString("Create oui table");
-        QMutexLocker ml(&nbDBLock_);
-        ouiQuery.exec("CREATE TABLE oui (mac CHAR(20) NOT NULL PRIMARY KEY, organ VARCHAR(64) NOT NULL)");
-
-        QFile file("manuf_rep.txt");
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            qWarning() << QString("Not open oui file");
-           // error message here
-           return false;
-        }
-
-        QString getLine;
-        QTextStream fileStream(&file);
-        while (!fileStream.atEnd()) {
-            getLine = fileStream.readLine();
-            QStringList ouiResult = getLine.split('\t');
-
-            {
-                QMutexLocker ml(&nbDBLock_);
-                ouiQuery.prepare("INSERT INTO oui VALUES(:mac, :organ)");
-                ouiQuery.bindValue(":mac", ouiResult.at(0));
-                ouiQuery.bindValue(":organ", ouiResult.at(1));
-                ouiQuery.exec();
-            }
-        }
-    }
-
     return true;
 }
 
