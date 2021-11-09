@@ -70,8 +70,8 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
 
 	ui->sHourBox->setCurrentText(QString::number(sTime_.hour()));
 	ui->sMinBox->setCurrentText(QString::number(sTime_.minute()));
-	ui->eHourBox->setCurrentText(QString::number(eTime_.hour()));
-	ui->eMinBox->setCurrentText(QString::number(eTime_.minute()));
+    ui->eHourBox->setCurrentText(QString::number(eTime_.hour() < 0 ? 24 : eTime_.hour()));
+    ui->eMinBox->setCurrentText(QString::number(eTime_.minute() < 0 ? 0 : eTime_.minute()));
 
 
     ui->dayOfTheWeekCheck_0->setChecked(dayOfWeek_[0]);
@@ -134,10 +134,10 @@ void PolicyConfig::on_applyButton_clicked()
 
         if(policyId_ && dayOfWeek_.count(true) == 1) {
             QMutexLocker ml(m_);
-            query_->prepare("UPDATE policy SET start_time=:start_time, end_time=:end_time, day_of_week=:day_of_week WHERE policy_id=:policy_id");
+            query_->prepare("UPDATE policy SET start_time=:start_time, end_time=:end_time, day_of_the_week=:day_of_the_week WHERE policy_id=:policy_id");
             query_->bindValue(":start_time", QString("%1%2").arg(sTime_.hour(), 2, 10, QLatin1Char('0')).arg(sTime_.minute(), 2, 10, QLatin1Char('0')));
             query_->bindValue(":end_time", QString("%1%2").arg(eTime_.hour() < 0 ? 24 : eTime_.hour(), 2, 10, QLatin1Char('0')).arg(eTime_.minute() < 0 ? 0 : eTime_.minute(), 2, 10, QLatin1Char('0')));
-            query_->bindValue(":day_of_week", QString::number(dayOfWeek_.indexOf(true)));
+            query_->bindValue(":day_of_the_week", QString::number(dayOfWeek_.indexOf(true)));
             query_->bindValue(":policy_id", policyId_);
             query_->exec();
         } else {
