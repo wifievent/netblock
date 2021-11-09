@@ -13,15 +13,15 @@ bool NetBlock::dbCheck() {
     qDebug() << QString("Start dbCheck Function");
 
     QSqlQuery nbQuery(nbDB_);
-    QSqlQuery ouiQuery(ouiDB_);
     QString result;
 
     {
         QMutexLocker ml(&nbDBLock_);
         nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'host'");
+
+        nbQuery.next();
+        result = nbQuery.value(0).toString();
     }
-    nbQuery.next();
-    result = nbQuery.value(0).toString();
     if(result.compare("host")) {
         qDebug() << QString("Create host table");
         QMutexLocker ml(&nbDBLock_);
@@ -31,9 +31,10 @@ bool NetBlock::dbCheck() {
     {
         QMutexLocker ml(&nbDBLock_);
         nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'policy'");
+
+        nbQuery.next();
+        result = nbQuery.value(0).toString();
     }
-    nbQuery.next();
-    result = nbQuery.value(0).toString();
     if(result.compare("policy")) {
         qDebug() << QString("Create policy table");
         QMutexLocker ml(&nbDBLock_);
@@ -43,9 +44,12 @@ bool NetBlock::dbCheck() {
     {
         QMutexLocker ml(&nbDBLock_);
         nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'block_host'");
+
+        nbQuery.next();
+        result = nbQuery.value(0).toString();
+
     }
-    nbQuery.next();
-    result = nbQuery.value(0).toString();
+
     if(result.compare("block_host")) {
         qDebug() << QString("Create block_host view");
         QMutexLocker ml(&nbDBLock_);
@@ -193,11 +197,11 @@ void NetBlock::updateHosts() {
     {
         QMutexLocker ml(&nbDBLock_);
         nbQuery.exec("SELECT * FROM block_host");
-    }
 
-    while(nbQuery.next()) {
-        Host host(GMac(nbQuery.value(0).toString()), GIp(nbQuery.value(1).toString()), nbQuery.value(2).toString());
-        nbNewHosts_.insert(host.mac_, host);
+        while(nbQuery.next()) {
+            Host host(GMac(nbQuery.value(0).toString()), GIp(nbQuery.value(1).toString()), nbQuery.value(2).toString());
+            nbNewHosts_.insert(host.mac_, host);
+        }
     }
 
     for(HostMap::iterator iter = nbHosts_.begin(); iter != nbHosts_.end(); ++iter) {

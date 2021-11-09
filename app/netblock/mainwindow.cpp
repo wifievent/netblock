@@ -66,6 +66,7 @@ void MainWindow::processHostDetected(Host* host) {
             nbQuery.prepare("UPDATE host SET nick_name = :nick_name WHERE host_id = :host_id");
             nbQuery.bindValue(":nick_name", iter->nickName_);
             nbQuery.bindValue(":host_id", iter->hostId_);
+            nbQuery.exec();
         }
         if(tmp.ip_ != iter->ip_) {
             QMutexLocker ml(&nb_.nbDBLock_);
@@ -84,10 +85,11 @@ void MainWindow::processHostDetected(Host* host) {
             ouiQuery.prepare("SELECT organ FROM oui WHERE substr(mac, 1, 8) = substr(:mac, 1, 8)");
             ouiQuery.bindValue(":mac", QString(tmp.mac_));
             ouiQuery.exec();
-        }
 
-        while(ouiQuery.next()) {
-            tmp.oui_ = ouiQuery.value(0).toString();
+            while(ouiQuery.next()) {
+                tmp.oui_ = ouiQuery.value(0).toString();
+            }
+
         }
 
         tmp.nickName_ = tmp.hostName_;
@@ -108,9 +110,10 @@ void MainWindow::processHostDetected(Host* host) {
             nbQuery.prepare("SELECT host_id FROM host WHERE mac=:mac");
             nbQuery.bindValue(":mac", QString(tmp.mac_));
             nbQuery.exec();
+
+            nbQuery.next();
+            tmp.hostId_ = nbQuery.value(0).toInt();
         }
-        nbQuery.next();
-        tmp.hostId_ = nbQuery.value(0).toInt();
 
         dInfoList_.append(tmp);
         if(dInfoList_.length() <= 1) {
@@ -140,18 +143,19 @@ void MainWindow::setDevInfoFromDatabase() {
     {
         QMutexLocker ml(&nb_.nbDBLock_);
         nbQuery.exec("SELECT * FROM host ORDER BY last_ip");
-    }
 
-    while(nbQuery.next()) {
-        DInfo tmp;
-        tmp.hostId_ = nbQuery.value(0).toInt();
-        tmp.mac_ = GMac(nbQuery.value(1).toString());
-        tmp.ip_ = GIp(nbQuery.value(2).toString());
-        tmp.hostName_ = nbQuery.value(3).toString();
-        tmp.nickName_ = nbQuery.value(4).toString();
-        tmp.oui_ = nbQuery.value(5).toString();
+        while(nbQuery.next()) {
+            DInfo tmp;
+            tmp.hostId_ = nbQuery.value(0).toInt();
+            tmp.mac_ = GMac(nbQuery.value(1).toString());
+            tmp.ip_ = GIp(nbQuery.value(2).toString());
+            tmp.hostName_ = nbQuery.value(3).toString();
+            tmp.nickName_ = nbQuery.value(4).toString();
+            tmp.oui_ = nbQuery.value(5).toString();
 
-        dInfoList_.append(tmp);
+            dInfoList_.append(tmp);
+        }
+
     }
 
 }
@@ -419,20 +423,21 @@ void MainWindow::setPolicyListFromDatabase() {
         nbQuery.prepare("SELECT policy_id, start_time, end_time, day_of_the_week, host_id FROM policy WHERE host_id = :host_id ORDER BY day_of_the_week ASC");
         nbQuery.bindValue(":host_id", selectedHostId_);
         nbQuery.exec();
-    }
 
-    while(nbQuery.next()) {
-        QVector<QString> tmp;
-        tmp.append(nbQuery.value(0).toString());
-        tmp.append(nbQuery.value(1).toString());
-        tmp.append(nbQuery.value(2).toString());
-        tmp.append(nbQuery.value(3).toString());
-        tmp.append(nbQuery.value(4).toString());
+        while(nbQuery.next()) {
+            QVector<QString> tmp;
+            tmp.append(nbQuery.value(0).toString());
+            tmp.append(nbQuery.value(1).toString());
+            tmp.append(nbQuery.value(2).toString());
+            tmp.append(nbQuery.value(3).toString());
+            tmp.append(nbQuery.value(4).toString());
 
-        PolicyObj tmpObj;
-        tmpObj.set(tmp);
+            PolicyObj tmpObj;
+            tmpObj.set(tmp);
 
-        policyList_.append(tmpObj);
+            policyList_.append(tmpObj);
+        }
+
     }
 }
 

@@ -46,18 +46,19 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
             query_->prepare("SELECT host_id, start_time, end_time, day_of_the_week FROM policy WHERE policy_id = :policy_id");
             query_->bindValue(":policy_id", policyId);
             query_->exec();
+
+            query_->next();
+            int sHour = query_->value(1).toString().leftRef(2).toInt();
+            int sMin = query_->value(1).toString().rightRef(2).toInt();
+            int eHour = query_->value(2).toString().leftRef(2).toInt();
+            int eMin = query_->value(2).toString().rightRef(2).toInt();
+            sTime_ = QTime(sHour, sMin);
+            eTime_ = QTime(eHour, eMin);
+            dayOfWeek_[query_->value(3).toInt()] = true;
+
+            hostId_ = query->value(0).toInt();
+
         }
-
-        query_->next();
-        int sHour = query_->value(1).toString().leftRef(2).toInt();
-        int sMin = query_->value(1).toString().rightRef(2).toInt();
-        int eHour = query_->value(2).toString().leftRef(2).toInt();
-        int eMin = query_->value(2).toString().rightRef(2).toInt();
-        sTime_ = QTime(sHour, sMin);
-        eTime_ = QTime(eHour, eMin);
-        dayOfWeek_[query_->value(3).toInt()] = true;
-
-        hostId_ = query->value(0).toInt();
 
         qDebug() << "else in"<< sTime_.hour() << sTime_.minute() << eTime_.hour() << eTime_.minute();
     }
