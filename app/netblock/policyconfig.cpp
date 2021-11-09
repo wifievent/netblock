@@ -7,6 +7,11 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
 {
     ui->setupUi(this);
 
+	ui->sHourBox->setEditable(true);
+	ui->sMinBox->setEditable(true);
+	ui->eHourBox->setEditable(true);
+	ui->eMinBox->setEditable(true);
+
     qDebug() <<"PolicyId: " << policyId;
 
     if(policyId == 0) {
@@ -34,9 +39,9 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
             dayOfWeek_[iter->column()] = true;
         }
         sTime_ = QTime(indexList.constFirst().row(), 0);
-        eTime_ = QTime(indexList.constLast().row(), 0);
+		eTime_ = QTime(indexList.constLast().row() + 1, 0);
         if(indexList.constLast().row() + 1 == 24) {
-            eTime_ = QTime(23, 50);
+			eTime_ = QTime(23, 59);
         }
     } else {
         ui->deleteButton->setEnabled(true);
@@ -63,10 +68,10 @@ PolicyConfig::PolicyConfig(QModelIndexList indexList, int policyId, int hostId, 
         qDebug() << "else in"<< sTime_.hour() << sTime_.minute() << eTime_.hour() << eTime_.minute();
     }
 
-    ui->sHourBox->setCurrentIndex(ui->sHourBox->findText(QString::number(sTime_.hour())));
-    ui->sMinBox->setCurrentIndex(ui->sMinBox->findText(QString::number(sTime_.minute())));
-    ui->eHourBox->setCurrentIndex(ui->eHourBox->findText(QString::number(eTime_.hour())));
-    ui->eMinBox->setCurrentIndex(ui->eMinBox->findText(QString::number(eTime_.minute())));
+	ui->sHourBox->setCurrentText(QString::number(sTime_.hour()));
+	ui->sMinBox->setCurrentText(QString::number(sTime_.minute()));
+	ui->eHourBox->setCurrentText(QString::number(eTime_.hour()));
+	ui->eMinBox->setCurrentText(QString::number(eTime_.minute()));
 
 
     ui->dayOfTheWeekCheck_0->setChecked(dayOfWeek_[0]);
