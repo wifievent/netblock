@@ -71,5 +71,8 @@ Thumbs.db
 *.dll
 *.exe
 
-bin/
+bin/*
+!bin/oui.db
+!bin/manuf_rep.txt
+
 build-*/

@@ -1,0 +1,17 @@
+NetBlock v0.9.0.0 Release Notes
+========================
+
+This release NetBlock program v.0.9.0.0
+
+Introduction:
+  Internet Netwrok Control Service (NetBlock)
+
+Configuration:
+  Standard C++
+  Qt Framework
+  npcap
+  Snoopspy g library: https://github.com/snoopspy/g
+
+Feature:
+  Set network policy
+  Block using network

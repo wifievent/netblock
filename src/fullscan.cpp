@@ -33,7 +33,10 @@ void FullScan::run() {
 	qDebug() << "beg";
 
 	GIntf* intf = device_->intf();
-	Q_ASSERT(intf != nullptr);
+	if (intf == nullptr) {
+		qCritical() << "intf is null";
+		return;
+	}
 
 	GIp myIp = intf->ip();
 	GMac myMac = intf->mac();

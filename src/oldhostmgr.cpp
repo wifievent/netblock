@@ -11,8 +11,7 @@ ActiveScanThread::~ActiveScanThread() {
 }
 
 void ActiveScanThread::run() {
-	qDebug() << "beg";
-
+	// qDebug() << "beg";
 	GPcapDevice* device = &ohm_->lhm_->device_;
 	GIntf* intf = device->intf();
 	Q_ASSERT(intf != nullptr);
@@ -49,11 +48,11 @@ void ActiveScanThread::run() {
 
 		qint64 now = et.elapsed();
 		if (host_->lastAccess_ + ohm_->scanStartTimeout_ > now) { // accessed
-			qDebug() << QString("access detected %1").arg(QString(host_->mac_));
+			qDebug() << QString("access detected %1 %2").arg(QString(host_->mac_), QString(host_->ip_));
 			break;
 		}
 
-		qDebug() << QString("start=%1 now=%2 diff=%3").arg(start).arg(now).arg(now - start); // gilgil temp 2021.10.24
+		// qDebug() << QString("start=%1 now=%2 diff=%3").arg(start).arg(now).arg(now - start); // gilgil temp 2021.10.24
 		if (start + ohm_->deleteTimeout_ < now) {
 			qDebug() << QString("start=%1 now=%2 diff=%3").arg(start).arg(now).arg(now - start);
 			emit ohm_->lhm_->hostDeleted(host_);
@@ -66,9 +65,10 @@ void ActiveScanThread::run() {
 	ActiveScanThreadMap* astm = &ohm_->astm_;
 	QMutexLocker ml(&astm->m_);
 	int res = astm->remove(host_->mac_);
-	qDebug() << QString("astm->remove return %1").arg(res);
-
-	qDebug() << "end";
+	if (res != 1) {
+		qDebug() << QString("astm->remove return %1").arg(res);
+	}
+	// qDebug() << "end";
 }
 
 
@@ -109,7 +109,7 @@ void OldHostMgr::run() {
 			QMutexLocker ml(&lhm_->hosts_.m_);
 			qint64 now = et.elapsed();
 			for (Host& host : lhm_->hosts_) {
-				qDebug() << QString("lastAccess=%1 now=%2 diff=%3").arg(host.lastAccess_).arg(now).arg(now-host.lastAccess_); // gilgil temp 2021.10.24
+				// qDebug() << QString("lastAccess=%1 now=%2 diff=%3").arg(host.lastAccess_).arg(now).arg(now-host.lastAccess_); // gilgil temp 2021.10.24
 				if (host.lastAccess_ + scanStartTimeout_ < now) {
 					QMutexLocker ml(&astm_.m_);
 					ActiveScanThreadMap::iterator it = astm_.find(host.mac_);
