@@ -31,7 +31,9 @@ public:
     GMac myMac_{GMac::nullMac()};
 
 protected:
-    bool processDhcp(GPacket* ethPacket);
+	bool processDhcp(GPacket* packet, GMac* mac, GIp* ip, QString* hostName);
+	bool processArp(GEthHdr* ethHdr, GArpHdr* arpHdr, GMac* mac, GIp* ip);
+	bool processIp(GEthHdr* ethHdr, GIpHdr* ipHdr, GMac* mac, GIp* ip);
 
 public slots:
     void captured(GPacket* packet);
