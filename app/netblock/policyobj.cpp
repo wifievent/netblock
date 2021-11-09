@@ -6,11 +6,11 @@ PolicyObj::~PolicyObj() {}
 
 void PolicyObj::reset()
 {
-  policyId = 0;
-  startTime = nullptr;
-  endTime = nullptr;
-  dayOfTheWeek = -1;
-  hostId = 0;
+    policyId = 0;
+    startTime = nullptr;
+    endTime = nullptr;
+    dayOfTheWeek = -1;
+    hostId = 0;
 };
 
 void PolicyObj::set(QVector<QString> row)
