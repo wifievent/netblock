@@ -1,0 +1,7 @@
+NetBlock v0.9.0.1 Release Notes
+========================
+
+This release NetBlock program v.0.9.0.1
+
+Bug Fix:
+    Don't edit Policy Table Widget
