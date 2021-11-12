@@ -14,7 +14,7 @@ struct G_EXPORT LiveHostMgr : GStateObj {
     Q_OBJECT
 
 public:
-    LiveHostMgr(QObject* parent = nullptr);
+	LiveHostMgr(QObject* parent, GPcapDevice* pcapDevice);
     ~LiveHostMgr() override;
 
 protected:
@@ -23,11 +23,12 @@ protected:
 
 public:
     HostMap hosts_;
-    GPcapDevice device_;
+	GPcapDevice* device_{nullptr};
     FullScan fs_;
     OldHostMgr ohm_;
     QElapsedTimer et_;
 
+	GIntf* intf_{nullptr};
     GMac myMac_{GMac::nullMac()};
 
 protected:

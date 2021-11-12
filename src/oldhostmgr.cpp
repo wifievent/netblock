@@ -12,7 +12,7 @@ ActiveScanThread::~ActiveScanThread() {
 
 void ActiveScanThread::run() {
 	// qDebug() << "beg";
-	GPcapDevice* device = &ohm_->lhm_->device_;
+	GPcapDevice* device = ohm_->lhm_->device_;
 	GIntf* intf = device->intf();
 	Q_ASSERT(intf != nullptr);
 

@@ -45,7 +45,7 @@ public:
 
     void updateHosts();
 
-    LiveHostMgr lhm_;
+	LiveHostMgr lhm_{this, &device_};
 
     QMutex nbDBLock_;
     QMutex ouiDBLock_;

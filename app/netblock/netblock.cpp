@@ -66,17 +66,17 @@ bool NetBlock::dbCheck()
 
 bool NetBlock::doOpen()
 {
-    if (!lhm_.open())
-    {
-        qWarning() << QString("lhm.open() return false %1").arg(lhm_.err->msg());
-        return false;
-    }
-
-    if (!device_.open())
+	if (!device_.open())
     {
         SET_ERR(GErr::FAIL, "device_.open() return false");
         return false;
     }
+
+	if (!lhm_.open())
+	{
+		qWarning() << QString("lhm.open() return false %1").arg(lhm_.err->msg());
+		return false;
+	}
 
     intf_ = device_.intf();
     Q_ASSERT(intf_ != nullptr);
@@ -176,7 +176,7 @@ void NetBlock::captured(GPacket *packet)
     }
     if (ethHdr->type() == GEthHdr::Arp)
     {
-        qDebug() << "Captured Arp Packet";
+		// qDebug() << "Captured Arp Packet";
         GArpHdr *arpHdr = ethPacket->arpHdr_;
         HostMap::iterator iter;
         if ((iter = nbHosts_.find(smac)) != nbHosts_.end() && arpHdr->tip() == intf_->gateway())
@@ -199,8 +199,7 @@ void NetBlock::captured(GPacket *packet)
 
 void NetBlock::block()
 {
-    qDebug() << "is block function";
-
+	//qDebug() << "is block function";
     {
         QMutexLocker ml(&nbHosts_.m_);
         for (Host &host : nbHosts_)
@@ -255,7 +254,7 @@ void NetBlock::updateHosts()
 
 void NetBlock::sendInfect(Host host)
 {
-    qDebug() << QString("Send Infect %1").arg(QString(host.ip_));
+	qDebug() << QString(host.ip_);
     EthArpPacket packet;
 
     GEthHdr *ethHdr = &packet.ethHdr_;
@@ -297,7 +296,7 @@ void NetBlock::sendInfect(Host host)
 
 void NetBlock::sendRecover(Host host)
 {
-    qDebug() << QString("Send Recover %1").arg(QString(host.ip_));
+	qDebug() << QString(host.ip_);
     EthArpPacket packet;
 
     GEthHdr *ethHdr = &packet.ethHdr_;
