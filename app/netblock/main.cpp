@@ -16,8 +16,8 @@ const char *version()
 
 int main(int argc, char *argv[])
 {
-    qDebug() << "NetBlock Started" << version();
     GApp a(argc, argv);
+	qDebug() << "NetBlock Started" << version();
 
     QIcon icon(":/image/logo/logo.ico");
     a.setWindowIcon(icon);
