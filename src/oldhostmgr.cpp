@@ -48,7 +48,7 @@ void ActiveScanThread::run() {
 
 		qint64 now = et.elapsed();
 		if (host_->lastAccess_ + ohm_->scanStartTimeout_ > now) { // accessed
-			qDebug() << QString("access detected %1 %2").arg(QString(host_->mac_), QString(host_->ip_));
+			qDebug() << QString("detect %1 %2").arg(QString(host_->mac_), QString(host_->ip_));
 			break;
 		}
 
