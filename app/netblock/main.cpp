@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "udpserver.h"
 
 #include <GApp>
 
@@ -19,6 +20,9 @@ int main(int argc, char *argv[])
     GApp a(argc, argv);
 	qDebug() << "NetBlock Started" << version();
 
+    UdpServer udpServer;
+    udpServer.start();
+
     QIcon icon(":/image/logo/logo.ico");
     a.setWindowIcon(icon);
 
@@ -32,4 +36,6 @@ int main(int argc, char *argv[])
         m.show();
         a.exec();
     }
+
+    udpServer.stop();
 }
