@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "udpserver.h"
+#include "weudpserver.h"
 
 #include <GApp>
 
@@ -20,8 +20,8 @@ int main(int argc, char *argv[])
     GApp a(argc, argv);
 	qDebug() << "NetBlock Started" << version();
 
-    UdpServer udpServer;
-    udpServer.start();
+    WEUdpServer ws;
+    ws.start(7284);
 
     QIcon icon(":/image/logo/logo.ico");
     a.setWindowIcon(icon);
@@ -37,5 +37,5 @@ int main(int argc, char *argv[])
         a.exec();
     }
 
-    udpServer.stop();
+    ws.stop();
 }

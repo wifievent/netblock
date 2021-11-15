@@ -28,7 +28,8 @@ SOURCES += \
     dinfo.cpp \
     netblock.cpp \
     policyconfig.cpp \
-    policyobj.cpp
+    policyobj.cpp \
+    weudpserver.cpp
 
 HEADERS += \
     ../../src/etharppacket.h \
@@ -44,7 +45,8 @@ HEADERS += \
     dinfo.h \
     netblock.h \
     policyconfig.h \
-    policyobj.h
+    policyobj.h \
+    weudpserver.h
 
 FORMS += \
     mainwindow.ui \

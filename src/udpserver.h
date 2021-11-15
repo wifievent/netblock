@@ -11,16 +11,7 @@ public:
     UdpServer();
     ~UdpServer();
 
-    bool check = true;
-
-    std::thread* t1;
-
-public:
     bool bind(int port);
-    void start();
-    void stop();
-
-    void handleCnt();
 
 protected:
     int setSockOptforReuse();

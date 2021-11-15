@@ -24,38 +24,6 @@ bool UdpServer::bind(int port)
     return true;
 }
 
-void UdpServer::start()
-{
-    bind(7284);
-
-    t1 = new std::thread(&UdpServer::handleCnt, this);
-}
-
-void UdpServer::stop()
-{
-    check = false;
-
-    t1->join();
-
-    disconnect();
-}
-
-void UdpServer::handleCnt() {
-    char buf[BUFSIZ];
-    while(check) {
-        int res = recv(buf, sizeof(buf));
-        if(res == -1) {
-            continue;
-        }
-
-        qDebug() << "buf: " << buf;
-
-        if(strcmp(buf, "run already?") == 0) {
-            send("run already!", strlen("run already!") + 1);
-        }
-    }
-}
-
 int UdpServer::setSockOptforReuse()
 {
     int optval = 1;
