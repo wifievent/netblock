@@ -19,12 +19,18 @@ SOURCES += \
     ../../src/host.cpp \
     ../../src/livehostmgr.cpp \
     ../../src/oldhostmgr.cpp \
+    ../../src/socket.cpp \
+    ../../src/udpclient.cpp \
+    ../../src/udpserver.cpp \
+    ../../src/udpsocket.cpp \
     main.cpp \
     mainwindow.cpp \
     dinfo.cpp \
     netblock.cpp \
     policyconfig.cpp \
-    policyobj.cpp
+    policyobj.cpp \
+    weudpclient.cpp \
+    weudpserver.cpp
 
 HEADERS += \
     ../../src/etharppacket.h \
@@ -32,11 +38,17 @@ HEADERS += \
     ../../src/host.h \
     ../../src/livehostmgr.h \
     ../../src/oldhostmgr.h \
+    ../../src/socket.h \
+    ../../src/udpclient.h \
+    ../../src/udpserver.h \
+    ../../src/udpsocket.h \
     mainwindow.h \
     dinfo.h \
     netblock.h \
     policyconfig.h \
-    policyobj.h
+    policyobj.h \
+    weudpclient.h \
+    weudpserver.h
 
 FORMS += \
     mainwindow.ui \
