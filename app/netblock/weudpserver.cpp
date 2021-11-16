@@ -10,9 +10,9 @@ void WEUdpServer::start(int port) {
 void WEUdpServer::stop() {
     check = false;
 
-    t1->join();
-
     disconnect();
+
+    t1->join();
 }
 
 void WEUdpServer::handleCnt() {
