@@ -20,9 +20,6 @@ void WEUdpServer::handleCnt() {
     while(check) {
         int res = recv(buf, sizeof(buf));
         if(res > 0) {
-
-            qDebug() << "res" << res;
-
             qDebug() << "buf: " << buf;
 
             if(strcmp(buf, "run already?") == 0) {

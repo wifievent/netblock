@@ -29,6 +29,7 @@ SOURCES += \
     netblock.cpp \
     policyconfig.cpp \
     policyobj.cpp \
+    weudpclient.cpp \
     weudpserver.cpp
 
 HEADERS += \
@@ -46,6 +47,7 @@ HEADERS += \
     netblock.h \
     policyconfig.h \
     policyobj.h \
+    weudpclient.h \
     weudpserver.h
 
 FORMS += \
