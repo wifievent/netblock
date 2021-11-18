@@ -38,7 +38,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::processHostDetected(Host *host)
 {
-    qDebug() << QString("host detected %1 %2 %3 %4").arg(QString(host->mac_), QString(host->ip_), host->hostName_, host->nickName_);
+	qDebug() << QString("%1 %2 %3 %4").arg(QString(host->mac_), QString(host->ip_), host->hostName_, host->nickName_);
     DInfo tmp(*host);
     tmp.isConnect_ = true;
 
@@ -138,7 +138,7 @@ void MainWindow::processHostDetected(Host *host)
 
 void MainWindow::processHostDeleted(Host *host)
 {
-    qDebug() << QString("host deleted %1 %2 %3 %4").arg(QString(host->mac_), QString(host->ip_), host->hostName_, host->nickName_);
+	qDebug() << QString("%1 %2 %3 %4").arg(QString(host->mac_), QString(host->ip_), host->hostName_, host->nickName_);
     DInfo tmp(*host);
     for (DInfoList::iterator iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter)
     {

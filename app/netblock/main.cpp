@@ -1,4 +1,6 @@
 #include "mainwindow.h"
+#include "weudpserver.h"
+#include "weudpclient.h"
 
 #include <GApp>
 
@@ -16,8 +18,22 @@ const char *version()
 
 int main(int argc, char *argv[])
 {
-    qDebug() << "NetBlock Started" << version();
     GApp a(argc, argv);
+	qDebug() << "NetBlock Started" << version();
+
+    WEUdpClient client;
+    if(client.searchProduct(7284, 1, 0, "run already?"))
+    {
+        qDebug() << "NetBlock stop thanks to using";
+        return 0;
+    }
+    else
+    {
+        qInfo() << "NetBlock Started" << version();
+    }
+
+    WEUdpServer ws;
+    ws.start(7284);
 
     QIcon icon(":/image/logo/logo.ico");
     a.setWindowIcon(icon);
@@ -32,4 +48,6 @@ int main(int argc, char *argv[])
         m.show();
         a.exec();
     }
+
+    ws.stop();
 }

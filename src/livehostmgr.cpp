@@ -1,7 +1,7 @@
 #include "livehostmgr.h"
 
-LiveHostMgr::LiveHostMgr(QObject* parent) : GStateObj(parent) {
-	QObject::connect(&device_, &GCapture::captured, this, &LiveHostMgr::captured, Qt::DirectConnection);
+LiveHostMgr::LiveHostMgr(QObject* parent, GPcapDevice* pcapDevice) : GStateObj(parent), device_(pcapDevice) {
+	QObject::connect(device_, &GCapture::captured, this, &LiveHostMgr::captured, Qt::DirectConnection);
 }
 
 LiveHostMgr::~LiveHostMgr() {
@@ -11,16 +11,12 @@ LiveHostMgr::~LiveHostMgr() {
 bool LiveHostMgr::doOpen() {
 	hosts_.clear();
 
-	if (!device_.open()) {
-		SET_ERR(GErr::FAIL, "device_.open() return false");
-		return false;
-	}
-	GIntf* intf = device_.intf();
-	Q_ASSERT(intf != nullptr);
-	myMac_ = intf->mac();
+	intf_ = device_->intf();
+	Q_ASSERT(intf_ != nullptr);
+	myMac_ = intf_->mac();
 	qDebug() << "myMac =" << QString(myMac_);
 
-	fs_.device_ = &device_;
+	fs_.device_ = device_;
 	if (!fs_.open())
 		return false;
 
@@ -34,7 +30,6 @@ bool LiveHostMgr::doOpen() {
 bool LiveHostMgr::doClose() {
 	fs_.close();
 	ohm_.close();
-	device_.close();
 	return true;
 }
 
@@ -92,7 +87,7 @@ bool LiveHostMgr::processArp(GEthHdr* ethHdr, GArpHdr* arpHdr, GMac* mac, GIp* i
 
 bool LiveHostMgr::processIp(GEthHdr* ethHdr, GIpHdr* ipHdr, GMac* mac, GIp* ip) {
 	GIp sip = ipHdr->sip();
-	if (!device_.intf()->isSameLanIp(sip)) return false;
+	if (!intf_->isSameLanIp(sip)) return false;
 
 	*mac = ethHdr->smac();
 	*ip = sip;
@@ -151,14 +146,12 @@ void LiveHostMgr::captured(GPacket* packet) {
 
 void LiveHostMgr::propLoad(QJsonObject jo) {
     GStateObj::propLoad(jo);
-    jo["PcapDevice"] >> device_;
     jo["FullScan"] >> fs_;
     jo["OldHostMgr"] >> ohm_;
 }
 
 void LiveHostMgr::propSave(QJsonObject& jo) {
     GStateObj::propSave(jo);
-    jo["PcapDevice"] <<  device_;
     jo["FullScan"] << fs_;
     jo["OldHostMgr"] << ohm_;
 }
