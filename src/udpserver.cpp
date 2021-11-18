@@ -28,6 +28,11 @@ int UdpServer::setSockOptforReuse()
 {
     int optval = 1;
     int result = 1;
+#ifdef Q_OS_WIN
+    result = setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, (char *)&optval, sizeof(optval));
+#endif
+#ifdef Q_OS_LINUX
     result = setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+#endif
     return result; //success 0, fail -1
 }

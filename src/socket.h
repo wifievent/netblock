@@ -6,9 +6,10 @@
 # include <stdlib.h>
 # include <unistd.h>
 
+#include <QtGlobal>
+
 #ifdef Q_OS_WIN
 #include <winsock2.h>
-#include <windows.h>
 #endif
 
 #ifdef Q_OS_LINUX
