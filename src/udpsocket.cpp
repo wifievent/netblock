@@ -36,7 +36,12 @@ int UdpSocket::disconnect()
     int result = 0;
     if(sock_ != 0)
     {
+#ifdef Q_OS_WIN
+        ::shutdown(sock_, SD_BOTH);
+#endif
+#ifdef Q_OS_LINUX
         ::shutdown(sock_, SHUT_RDWR);
+#endif
         result = ::close(sock_);
         sock_ = 0;
     }
