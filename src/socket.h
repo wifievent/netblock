@@ -4,10 +4,19 @@
 # include <stdio.h>
 # include <string.h>
 # include <stdlib.h>
+# include <unistd.h>
+
+#include <QtGlobal>
+
+#ifdef Q_OS_WIN
+#include <winsock2.h>
+#endif
+
+#ifdef Q_OS_LINUX
 # include <netinet/in.h>
 # include <sys/socket.h>
 # include <arpa/inet.h>
-# include <unistd.h>
+#endif
 
 #define BUFSIZE 65536
 

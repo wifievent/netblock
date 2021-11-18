@@ -14,4 +14,4 @@ visit the website: [WiFi Event](https://wifievent.io)
 - C++ 11
 
 ### Lastest Version
-- v0.9.1.0
+- v0.9.1.1
