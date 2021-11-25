@@ -2,6 +2,7 @@
 #define WEUDPSERVER_Hs
 
 #include "udpserver.h"
+#include <QtDebug>
 
 class WEUdpServer : public UdpServer
 {
@@ -16,7 +17,7 @@ public:
     void start(int port);
     void stop();
 
-    void handleCnt();
+    void handleClnt() override;
 };
 
 #endif // WEUDPSERVER_H

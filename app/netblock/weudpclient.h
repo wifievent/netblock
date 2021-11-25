@@ -5,6 +5,7 @@
 #include <GIp>
 
 #include "udpclient.h"
+#include <QDebug>
 
 class WEUdpClient : public UdpClient
 {

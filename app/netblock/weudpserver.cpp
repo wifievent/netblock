@@ -4,7 +4,7 @@ void WEUdpServer::start(int port) {
 
     bind(port);
 
-    t1 = new std::thread(&WEUdpServer::handleCnt, this);
+    t1 = new std::thread(&WEUdpServer::handleClnt, this);
 }
 
 void WEUdpServer::stop() {
@@ -15,7 +15,7 @@ void WEUdpServer::stop() {
     t1->join();
 }
 
-void WEUdpServer::handleCnt() {
+void WEUdpServer::handleClnt() {
     char buf[BUFSIZ];
     while(check) {
         int res = recv(buf, sizeof(buf));
