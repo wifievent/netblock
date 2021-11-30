@@ -4,6 +4,8 @@
 
 #include <GApp>
 
+#include <iostream>
+
 const char *version()
 {
     return
