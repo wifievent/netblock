@@ -10,6 +10,8 @@
 #include "fullscan.h"
 #include "oldhostmgr.h"
 
+#include <pcapdevice.h>
+
 struct G_EXPORT LiveHostMgr : GStateObj {
     Q_OBJECT
 
@@ -23,12 +25,12 @@ protected:
 
 public:
     HostMap hosts_;
-	GPcapDevice* device_{nullptr};
+    PcapDevice* device_{nullptr};
     FullScan fs_;
     OldHostMgr ohm_;
     QElapsedTimer et_;
 
-	GIntf* intf_{nullptr};
+    Intf* intf_{nullptr};
     GMac myMac_{GMac::nullMac()};
 
 protected:

@@ -3,6 +3,10 @@
 #include <GPcapDevice>
 #include <GWaitEvent>
 
+#include <thread>
+#include <mutex>
+#include "pcapdevice.h"
+
 struct G_EXPORT FullScan : GStateObj {
 	Q_OBJECT
 	Q_PROPERTY(int sendSleepTime MEMBER sendSleepTime_)
@@ -15,7 +19,7 @@ public:
 	FullScan(QObject* parent = nullptr);
 	~FullScan() override;
 
-	GPcapDevice* device_{nullptr}; // reference
+    PcapDevice* device_{nullptr}; // reference
 	GWaitEvent we_;
 
 protected:
@@ -25,6 +29,11 @@ protected:
 protected:
 	void run();
 
+    std::thread* myThread_;
+    std::mutex myMutex_;
+    std::condition_variable myCv_;
+
+
 	struct MyThread: GThread {
 		MyThread(QObject *parent) : GThread(parent) {}
 		~MyThread() {}
@@ -33,4 +42,5 @@ protected:
 			fullScan->run();
 		}
 	} thread_{this};
+
 };

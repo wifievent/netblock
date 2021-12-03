@@ -4,13 +4,16 @@
 #include <GMac>
 #include <GIp>
 
+#include "mac.h"
+#include "ip.h"
+
 struct Host {
     Host() {};
-	Host(GMac mac, GIp ip) : mac_(mac), ip_(ip) {}
-	Host(GMac mac, GIp ip, QString hostName): mac_(mac), ip_(ip), hostName_(hostName) {}
+    Host(Mac mac, Ip ip) : mac_(mac), ip_(ip) {}
+    Host(Mac mac, Ip ip, QString hostName): mac_(mac), ip_(ip), hostName_(hostName) {}
 
-	GMac mac_;
-	GIp ip_;
+    Mac mac_;
+    Ip ip_;
 	QString hostName_;
 	QString nickName_;
 	qint64 lastAccess_{0};

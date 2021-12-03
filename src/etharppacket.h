@@ -3,9 +3,12 @@
 #include <GEthHdr>
 #include <GArpHdr>
 
+#include "ethhdr.h"
+#include "arphdr.h"
+
 #pragma pack(push, 1)
 struct EthArpPacket {
-	GEthHdr ethHdr_;
-	GArpHdr arpHdr_;
+    EthHdr ethHdr_;
+    ArpHdr arpHdr_;
 };
 #pragma pack(pop)

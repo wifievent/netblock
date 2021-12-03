@@ -6,6 +6,9 @@
 #include <QMutex>
 #include "livehostmgr.h"
 
+
+#include <pcapdevice.h>
+
 struct LockableSqlDatabase : QSqlDatabase {
     QMutex m_;
     static QSqlDatabase addDatabase(QSqlDriver* driver,
@@ -25,7 +28,7 @@ struct NetBlock : GStateObj {
     int infectSleepTime_{10000}; //  10 sec
 
 private:
-	GPcapDevice device_;
+    PcapDevice device_;
     GIntf* intf_;
 
     GWaitEvent we_;
