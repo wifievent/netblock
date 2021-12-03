@@ -66,16 +66,14 @@ void FullScan::run() {
             if (res != Packet::Ok) {
                 qWarning() << QString("device_->write return %1").arg(int(res));
             }
-            {
-                std::unique_lock<std::mutex> lock(myMutex_);
-                if(myCv_.wait_for(lock,std::chrono::milliseconds(sendSleepTime_)) == std::cv_status::no_timeout) break;
-            }
-		}
-		if (!active()) break;
-        {
+
             std::unique_lock<std::mutex> lock(myMutex_);
-            if(myCv_.wait_for(lock, std::chrono::milliseconds(rescanSleepTime_)) == std::cv_status::no_timeout) break;
-        }
+            if(myCv_.wait_for(lock,std::chrono::milliseconds(sendSleepTime_)) == std::cv_status::no_timeout) break;
+		}
+        if (!active()) break;
+
+        std::unique_lock<std::mutex> lock(myMutex_);
+        if(myCv_.wait_for(lock, std::chrono::milliseconds(rescanSleepTime_)) == std::cv_status::no_timeout) break;
 	}
 
 	qDebug() << "end";

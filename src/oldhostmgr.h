@@ -4,10 +4,36 @@
 #include <GStateObj>
 #include <GThread>
 #include <GWaitEvent>
+
+#include <mutex>
 #include "host.h"
 #include "etharppacket.h"
 
 struct OldHostMgr;
+
+class testActiveScanThread : std::thread {
+public:
+    testActiveScanThread(OldHostMgr* ohm, Host* host): std::thread(&testActiveScanThread::run, this) {}
+    void run();
+};
+
+struct stdActiveScanThread : std::thread {
+    stdActiveScanThread(OldHostMgr* ohm, Host* host) : std::thread(&stdActiveScanThread::run, this), ohm_(ohm), host_(host) {}
+    ~stdActiveScanThread();
+
+    void run();
+
+    OldHostMgr* ohm_{nullptr};
+    Host* host_{nullptr};
+
+    std::mutex myMutex_;
+    std::condition_variable myCv_;
+};
+
+struct stdActiveScanThreadMap: std::map<Mac, stdActiveScanThread*> {
+    QMutex m_;
+};
+
 struct ActiveScanThread : GThread {
 	ActiveScanThread(OldHostMgr* ohm, Host* host);
 	~ActiveScanThread() override;
@@ -18,7 +44,7 @@ struct ActiveScanThread : GThread {
 	GWaitEvent we_;
 };
 
-struct ActiveScanThreadMap: QMap<GMac, ActiveScanThread*> {
+struct ActiveScanThreadMap: QMap<Mac, ActiveScanThread*> {
 	QMutex m_;
 };
 
@@ -48,15 +74,21 @@ protected:
 public:
 	LiveHostMgr* lhm_{nullptr}; // reference
 
-	ActiveScanThreadMap astm_;
-	GWaitEvent we_;
+    ActiveScanThreadMap astm_;
+    GWaitEvent we_;
+
+    stdActiveScanThreadMap sastm_;
+
+    std::thread* myThread_;
+    std::mutex myMutex_;
+    std::condition_variable myCv_;
 
 protected:
 	void run();
 
-	struct MyThread: GThread {
-		MyThread(QObject *parent);
-		~MyThread();
-		void run() override;
-	} thread_{this};
+    struct MyThread: GThread {
+        MyThread(QObject *parent);
+        ~MyThread();
+        void run() override;
+    } thread_{this};
 };

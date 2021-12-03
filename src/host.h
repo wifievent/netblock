@@ -4,6 +4,7 @@
 #include <GMac>
 #include <GIp>
 
+#include <mutex>
 #include "mac.h"
 #include "ip.h"
 
@@ -20,6 +21,6 @@ struct Host {
     QString defaultName();
 };
 
-struct HostMap : QHash<GMac, Host> {
-	QMutex m_;
+struct HostMap : QHash<Mac, Host> {
+    QMutex m_;
 };

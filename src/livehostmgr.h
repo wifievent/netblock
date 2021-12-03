@@ -16,7 +16,7 @@ struct G_EXPORT LiveHostMgr : GStateObj {
     Q_OBJECT
 
 public:
-	LiveHostMgr(QObject* parent, GPcapDevice* pcapDevice);
+    LiveHostMgr(QObject* parent, PcapDevice* pcapDevice);
     ~LiveHostMgr() override;
 
 protected:
@@ -31,7 +31,7 @@ public:
     QElapsedTimer et_;
 
     Intf* intf_{nullptr};
-    GMac myMac_{GMac::nullMac()};
+    Mac myMac_{Mac::nullMac()};
 
 protected:
 	bool processDhcp(GPacket* packet, GMac* mac, GIp* ip, QString* hostName);

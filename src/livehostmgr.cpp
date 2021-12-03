@@ -1,6 +1,6 @@
 #include "livehostmgr.h"
 
-LiveHostMgr::LiveHostMgr(QObject* parent, GPcapDevice* pcapDevice) : GStateObj(parent), device_(pcapDevice) {
+LiveHostMgr::LiveHostMgr(QObject* parent, PcapDevice* pcapDevice) : GStateObj(parent), device_(pcapDevice) {
 	QObject::connect(device_, &GCapture::captured, this, &LiveHostMgr::captured, Qt::DirectConnection);
 }
 
@@ -14,7 +14,7 @@ bool LiveHostMgr::doOpen() {
 	intf_ = device_->intf();
 	Q_ASSERT(intf_ != nullptr);
 	myMac_ = intf_->mac();
-	qDebug() << "myMac =" << QString(myMac_);
+    qDebug() << "myMac =" << QString(std::string(myMac_).data());
 
 	fs_.device_ = device_;
 	if (!fs_.open())
