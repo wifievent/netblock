@@ -10,13 +10,13 @@ INCLUDEPATH *= ../../src
 DESTDIR = ../../bin
 
 LIBS *= -L$${PWD}/../../../opensocket/lib -lopensocket
-
 INCLUDEPATH *= $${PWD}/../../../opensocket/external
 INCLUDEPATH *= $${PWD}/../../../opensocket/src
-
-#PRE_TARGETDEPS *= $${PWD}/../../../opensocket/lib/libudp-server.a
-#PRE_TARGETDEPS *= $${PWD}/../../../opensocket/lib/libudp-client.a
 PRE_TARGETDEPS *= $${PWD}/../../../opensocket/lib/libopensocket.a
+
+LIBS *= -L$${PWD}/../../../opennet/bin -lOpenNet
+INCLUDEPATH *= $${PWD}/../../../opennet/src
+PRE_TARGETDEPS *= $${PWD}/../../../opennet/bin/libOpenNet.a
 
 RESOURCES += image.qrc
 
