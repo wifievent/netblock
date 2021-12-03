@@ -66,6 +66,7 @@ bool NetBlock::dbCheck()
 
 bool NetBlock::doOpen()
 {
+    qDebug() << getenv("HOME");
 	if (!device_.open())
     {
         SET_ERR(GErr::FAIL, "device_.open() return false");
@@ -108,7 +109,11 @@ bool NetBlock::doOpen()
         return false;
     }
     nbDB_ = QSqlDatabase::addDatabase("QSQLITE", "netblock.db");
-    nbDB_.setDatabaseName("netblock.db");
+    // Windows: FOLDERID_Profile
+    //PWSTR path = NULL;
+    //SHGetKnownFolderPath(FOLDERID_Profile, 0, NULL, &path); //User directory
+
+    nbDB_.setDatabaseName("~/.config/netblock.db");
     if (!nbDB_.open())
     {
         qWarning() << QString("nbDB.open() return false %1").arg(nbDB_.lastError().text());
