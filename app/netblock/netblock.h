@@ -7,7 +7,7 @@
 #include "livehostmgr.h"
 
 
-#include <pcapdevice.h>
+#include "pcapdevice.h"
 
 struct LockableSqlDatabase : QSqlDatabase {
     QMutex m_;
@@ -33,9 +33,9 @@ private:
 
     GWaitEvent we_;
     
-    GMac gatewayMac_{GMac::nullMac()};
-    GMac myMac_{GMac::nullMac()};
-    GIp myIp_;
+    Mac gatewayMac_{Mac::nullMac()};
+    Mac myMac_{Mac::nullMac()};
+    Ip myIp_;
 
     HostMap nbHosts_;
     HostMap nbNewHosts_;

@@ -262,29 +262,29 @@ void NetBlock::sendInfect(Host host)
 	qDebug() << QString(host.ip_);
     EthArpPacket packet;
 
-    GEthHdr *ethHdr = &packet.ethHdr_;
-    ethHdr->dmac_ = GMac::nullMac();
+    EthHdr *ethHdr = &packet.ethHdr_;
+    ethHdr->dmac_ = Mac::nullMac();
     ethHdr->smac_ = myMac_;
     ethHdr->type_ = htons(GEthHdr::Arp);
 
-    GArpHdr *arpHdr = &packet.arpHdr_;
-    arpHdr->hrd_ = htons(GArpHdr::ETHER);
-    arpHdr->pro_ = htons(GEthHdr::Ip4);
-    arpHdr->hln_ = GMac::SIZE;
-    arpHdr->pln_ = GIp::SIZE;
-    arpHdr->op_ = htons(GArpHdr::Reply);
+    ArpHdr *arpHdr = &packet.arpHdr_;
+    arpHdr->hrd_ = htons(ArpHdr::ETHER);
+    arpHdr->pro_ = htons(EthHdr::Ip4);
+    arpHdr->hln_ = Mac::SIZE;
+    arpHdr->pln_ = Ip::SIZE;
+    arpHdr->op_ = htons(ArpHdr::Reply);
     arpHdr->smac_ = myMac_;
-    arpHdr->tmac_ = GMac::nullMac();
+    arpHdr->tmac_ = Mac::nullMac();
 
     //  gateway send
     ethHdr->dmac_ = gatewayMac_;
     arpHdr->sip_ = htonl(host.ip_);
     arpHdr->tmac_ = gatewayMac_;
     arpHdr->tip_ = htonl(intf_->gateway());
-    GPacket::Result gatewayRes = device_.write(GBuf(pbyte(&packet), sizeof(packet)));
-    if (gatewayRes != GPacket::Ok)
+    Packet::Result gatewayRes = device_.write(Buf(pbyte(&packet), sizeof(packet)));
+    if (gatewayRes != Packet::Ok)
     {
-        qWarning() << QString("device_->write return %1 %2").arg(int(gatewayRes)).arg(device_.err->msg());
+        qWarning() << QString("device_->write return %1").arg(int(gatewayRes));
     }
 
     //  target send
@@ -292,31 +292,31 @@ void NetBlock::sendInfect(Host host)
     arpHdr->sip_ = htonl(intf_->gateway());
     arpHdr->tmac_ = host.mac_;
     arpHdr->tip_ = htonl(host.ip_);
-    GPacket::Result hostRes = device_.write(GBuf(pbyte(&packet), sizeof(packet)));
-    if (hostRes != GPacket::Ok)
+    Packet::Result hostRes = device_.write(Buf(pbyte(&packet), sizeof(packet)));
+    if (hostRes != Packet::Ok)
     {
-        qWarning() << QString("device_->write return %1 %2").arg(int(hostRes)).arg(device_.err->msg());
+        qWarning() << QString("device_->write return %1").arg(int(hostRes));
     }
 }
 
 void NetBlock::sendRecover(Host host)
 {
-	qDebug() << QString(host.ip_);
+    qDebug() << QString(std::string(host.ip_).data());
     EthArpPacket packet;
 
-    GEthHdr *ethHdr = &packet.ethHdr_;
-    ethHdr->dmac_ = GMac::nullMac();
+    EthHdr *ethHdr = &packet.ethHdr_;
+    ethHdr->dmac_ = Mac::nullMac();
     ethHdr->smac_ = myMac_;
     ethHdr->type_ = htons(GEthHdr::Arp);
 
-    GArpHdr *arpHdr = &packet.arpHdr_;
-    arpHdr->hrd_ = htons(GArpHdr::ETHER);
-    arpHdr->pro_ = htons(GEthHdr::Ip4);
-    arpHdr->hln_ = GMac::SIZE;
-    arpHdr->pln_ = GIp::SIZE;
-    arpHdr->op_ = htons(GArpHdr::Reply);
-    arpHdr->smac_ = GMac::nullMac();
-    arpHdr->tmac_ = GMac::nullMac();
+    ArpHdr *arpHdr = &packet.arpHdr_;
+    arpHdr->hrd_ = htons(ArpHdr::ETHER);
+    arpHdr->pro_ = htons(EthHdr::Ip4);
+    arpHdr->hln_ = Mac::SIZE;
+    arpHdr->pln_ = Ip::SIZE;
+    arpHdr->op_ = htons(ArpHdr::Reply);
+    arpHdr->smac_ = Mac::nullMac();
+    arpHdr->tmac_ = Mac::nullMac();
 
     //  gateway send
     ethHdr->dmac_ = gatewayMac_;
@@ -324,10 +324,10 @@ void NetBlock::sendRecover(Host host)
     arpHdr->sip_ = htonl(host.ip_);
     arpHdr->tmac_ = gatewayMac_;
     arpHdr->tip_ = htonl(intf_->gateway());
-    GPacket::Result gatewayRes = device_.write(GBuf(pbyte(&packet), sizeof(packet)));
-    if (gatewayRes != GPacket::Ok)
+    Packet::Result gatewayRes = device_.write(Buf(pbyte(&packet), sizeof(packet)));
+    if (gatewayRes != Packet::Ok)
     {
-        qWarning() << QString("device_->write return %1 %2").arg(int(gatewayRes)).arg(device_.err->msg());
+        qWarning() << QString("device_->write return %1").arg(int(gatewayRes));
     }
 
     //  target send
@@ -336,10 +336,10 @@ void NetBlock::sendRecover(Host host)
     arpHdr->sip_ = htonl(intf_->gateway());
     arpHdr->tmac_ = host.mac_;
     arpHdr->tip_ = htonl(host.ip_);
-    GPacket::Result hostRes = device_.write(GBuf(pbyte(&packet), sizeof(packet)));
-    if (hostRes != GPacket::Ok)
+    Packet::Result hostRes = device_.write(Buf(pbyte(&packet), sizeof(packet)));
+    if (hostRes != Packet::Ok)
     {
-        qWarning() << QString("device_->write return %1 %2").arg(int(hostRes)).arg(device_.err->msg());
+        qWarning() << QString("device_->write return %1").arg(int(hostRes));
     }
 }
 
