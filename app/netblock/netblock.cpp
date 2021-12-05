@@ -85,7 +85,7 @@ bool NetBlock::doOpen()
     myIp_ = intf_->ip();
     GAtm atm;
     atm.intfName_ = device_.intfName_;
-    atm.insert(intf_->gateway(), GMac::nullMac());
+    atm.insert(intf_->gateway(), Mac::nullMac());
     if (!atm.open())
     {
         SET_ERR(GErr::FAIL, "atm.open() return false");
@@ -98,7 +98,7 @@ bool NetBlock::doOpen()
     }
     gatewayMac_ = atm.find(intf_->gateway()).value();
 
-    qDebug() << "Gateway:" << QString(intf_->gateway()) << QString(gatewayMac_);
+    qDebug() << "Gateway:" << QString(std::string(intf_->gateway()).data()) << QString(std::string(gatewayMac_).data());
 
     ouiDB_ = QSqlDatabase::addDatabase("QSQLITE", "oui.db");
     ouiDB_.setDatabaseName("oui.db");
@@ -162,12 +162,12 @@ bool NetBlock::doClose()
     return true;
 }
 
-void NetBlock::captured(GPacket *packet)
+void NetBlock::captured(Packet *packet)
 {
-    GEthPacket *ethPacket = PEthPacket(packet);
+    EthPacket *ethPacket = PEthPacket(packet);
 
-    GEthHdr *ethHdr = ethPacket->ethHdr_;
-    GMac smac = ethHdr->smac();
+    EthHdr *ethHdr = ethPacket->ethHdr_;
+    Mac smac = ethHdr->smac();
     if (smac == myMac_)
     {
 #ifdef Q_OS_WIN
@@ -182,11 +182,11 @@ void NetBlock::captured(GPacket *packet)
     if (ethHdr->type() == GEthHdr::Arp)
     {
 		// qDebug() << "Captured Arp Packet";
-        GArpHdr *arpHdr = ethPacket->arpHdr_;
+        ArpHdr *arpHdr = ethPacket->arpHdr_;
         HostMap::iterator iter;
         if ((iter = nbHosts_.find(smac)) != nbHosts_.end() && arpHdr->tip() == intf_->gateway())
         {
-            qDebug() << QString("Host IP: %1").arg(QString(iter->ip_));
+            qDebug() << QString("Host IP: %1").arg(QString(std::string(iter->ip_).data()));
             sendInfect(*iter);
         }
 
@@ -194,7 +194,7 @@ void NetBlock::captured(GPacket *packet)
         {
             if (arpHdr->tip() == host.ip_ && smac == gatewayMac_)
             {
-                qDebug() << QString("Host IP: %1").arg(QString(host.ip_));
+                qDebug() << QString("Host IP: %1").arg(QString(std::string(host.ip_).data()));
                 sendInfect(host);
                 break;
             }
@@ -234,7 +234,7 @@ void NetBlock::updateHosts()
 
         while (nbQuery.next())
         {
-            Host host(GMac(nbQuery.value(0).toString()), GIp(nbQuery.value(1).toString()), nbQuery.value(2).toString());
+            Host host(Mac(nbQuery.value(0).toString().toStdString()), Ip(nbQuery.value(1).toString().toStdString()), nbQuery.value(2).toString());
             nbNewHosts_.insert(host.mac_, host);
         }
     }
@@ -259,7 +259,7 @@ void NetBlock::updateHosts()
 
 void NetBlock::sendInfect(Host host)
 {
-	qDebug() << QString(host.ip_);
+    qDebug() << QString(std::string(host.ip_).data());
     EthArpPacket packet;
 
     EthHdr *ethHdr = &packet.ethHdr_;

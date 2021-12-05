@@ -29,7 +29,7 @@ struct NetBlock : GStateObj {
 
 private:
     PcapDevice device_;
-    GIntf* intf_;
+    Intf* intf_;
 
     GWaitEvent we_;
     
@@ -57,7 +57,7 @@ public:
     QSqlDatabase ouiDB_;
 
 public slots:
-    void captured(GPacket* packet);
+    void captured(Packet* packet);
     void block();
 
 protected:
