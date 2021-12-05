@@ -30,6 +30,8 @@ void stdActiveScanThread::run() {
 
     QElapsedTimer et;
     qint64 start = et.elapsed();
+
+    auto stdstart = std::chrono::steady_clock::now();
     while (true) {
         Packet::Result res = device->write(Buf(pbyte(&packet), sizeof(packet)));
         if (res != Packet::Ok) {
@@ -40,6 +42,9 @@ void stdActiveScanThread::run() {
         if(myCv_.wait_for(lock,std::chrono::milliseconds(ohm_->sendSleepTime_)) == std::cv_status::no_timeout) break;
 
         qint64 now = et.elapsed();
+
+        auto stdnow = std::chrono::steady_clock::now();
+
         if (host_->lastAccess_ + ohm_->scanStartTimeout_ > now) { // accessed
             qDebug() << QString("detect %1 %2").arg(QString(std::string(host_->mac_).data()), QString(std::string(host_->ip_).data()));
             break;

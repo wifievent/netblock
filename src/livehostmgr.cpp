@@ -33,16 +33,16 @@ bool LiveHostMgr::doClose() {
 	return true;
 }
 
-bool LiveHostMgr::processDhcp(GPacket* packet, GMac* mac, GIp* ip, QString* hostName) {
-	GUdpHdr* udpHdr = packet->udpHdr_;
+bool LiveHostMgr::processDhcp(Packet* packet, Mac* mac, Ip* ip, QString* hostName) {
+    UdpHdr* udpHdr = packet->udpHdr_;
 	if (udpHdr == nullptr) return false;
 
 	if (!(udpHdr->sport() == 67 || udpHdr->dport() == 67)) return false;
 
-	GBuf dhcp = packet->udpData_;
+    Buf dhcp = packet->udpData_;
 	if (dhcp.data_ == nullptr) return false;
 	if (dhcp.size_ < sizeof(GDhcpHdr)) return false;
-	GDhcpHdr* dhcpHdr = PDhcpHdr(dhcp.data_);
+    DhcpHdr* dhcpHdr = PDhcpHdr(dhcp.data_);
 
 	bool ok = false;
 	if (dhcpHdr->yourIp() != 0) { // DHCP Offer of DHCP ACK sent from server
@@ -51,10 +51,10 @@ bool LiveHostMgr::processDhcp(GPacket* packet, GMac* mac, GIp* ip, QString* host
 		ok = true;
 	}
 
-	GEthHdr* ethHdr = packet->ethHdr_;
+    EthHdr* ethHdr = packet->ethHdr_;
 	if (ethHdr == nullptr) return false;
 	gbyte* end = packet->buf_.data_ + packet->buf_.size_;
-	GDhcpHdr::Option* option = dhcpHdr->first();
+    DhcpHdr::Option* option = dhcpHdr->first();
 	while (true) {
 		if (option->type_ == GDhcpHdr::RequestedIpAddress) {
 			*ip = ntohl(*PIp(option->value()));
@@ -71,12 +71,12 @@ bool LiveHostMgr::processDhcp(GPacket* packet, GMac* mac, GIp* ip, QString* host
 	return ok;
 }
 
-bool LiveHostMgr::processArp(GEthHdr* ethHdr, GArpHdr* arpHdr, GMac* mac, GIp* ip) {
+bool LiveHostMgr::processArp(EthHdr* ethHdr, ArpHdr* arpHdr, Mac* mac, Ip* ip) {
 	if (ethHdr->smac() != arpHdr->smac()) {
 		qDebug() << QString("ARP spoofing detected %1 %2 %3").arg(
-			QString(ethHdr->smac()),
-			QString(arpHdr->smac()),
-			QString(arpHdr->sip()));
+            QString(std::string(ethHdr->smac()).data()),
+            QString(std::string(arpHdr->smac()).data()),
+            QString(std::string(arpHdr->sip()).data()));
 		return false;
 	}
 
@@ -85,8 +85,8 @@ bool LiveHostMgr::processArp(GEthHdr* ethHdr, GArpHdr* arpHdr, GMac* mac, GIp* i
 	return true;
 }
 
-bool LiveHostMgr::processIp(GEthHdr* ethHdr, GIpHdr* ipHdr, GMac* mac, GIp* ip) {
-	GIp sip = ipHdr->sip();
+bool LiveHostMgr::processIp(EthHdr* ethHdr, IpHdr* ipHdr, Mac* mac, Ip* ip) {
+    Ip sip = ipHdr->sip();
 	if (!intf_->isSameLanIp(sip)) return false;
 
 	*mac = ethHdr->smac();
@@ -94,12 +94,12 @@ bool LiveHostMgr::processIp(GEthHdr* ethHdr, GIpHdr* ipHdr, GMac* mac, GIp* ip) 
 	return true;
 }
 
-void LiveHostMgr::captured(GPacket* packet) {
-	GMac mac;
-	GIp ip;
+void LiveHostMgr::captured(Packet* packet) {
+    Mac mac;
+    Ip ip;
 	QString hostName;
 
-	GEthHdr* ethHdr = packet->ethHdr_;
+    EthHdr* ethHdr = packet->ethHdr_;
 	if (ethHdr == nullptr) return;
 
 	mac = ethHdr->smac();
@@ -107,7 +107,7 @@ void LiveHostMgr::captured(GPacket* packet) {
 
 
 	bool detected = false;
-	GIpHdr* ipHdr = packet->ipHdr_;
+    IpHdr* ipHdr = packet->ipHdr_;
 	if (ipHdr != nullptr) {
 		if (processDhcp(packet, &mac, &ip, &hostName))
 			detected = true;
@@ -115,7 +115,7 @@ void LiveHostMgr::captured(GPacket* packet) {
 			detected = true;
 	}
 
-	GArpHdr* arpHdr = packet->arpHdr_;
+    ArpHdr* arpHdr = packet->arpHdr_;
 	if (arpHdr != nullptr) {
 		if (processArp(ethHdr, arpHdr, &mac, &ip))
 			detected = true;

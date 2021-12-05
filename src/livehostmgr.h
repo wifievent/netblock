@@ -10,7 +10,8 @@
 #include "fullscan.h"
 #include "oldhostmgr.h"
 
-#include <pcapdevice.h>
+#include "pcapdevice.h"
+#include "dhcphdr.h"
 
 struct G_EXPORT LiveHostMgr : GStateObj {
     Q_OBJECT
@@ -34,12 +35,12 @@ public:
     Mac myMac_{Mac::nullMac()};
 
 protected:
-	bool processDhcp(GPacket* packet, GMac* mac, GIp* ip, QString* hostName);
-	bool processArp(GEthHdr* ethHdr, GArpHdr* arpHdr, GMac* mac, GIp* ip);
-	bool processIp(GEthHdr* ethHdr, GIpHdr* ipHdr, GMac* mac, GIp* ip);
+    bool processDhcp(Packet* packet, Mac* mac, Ip* ip, QString* hostName);
+    bool processArp(EthHdr* ethHdr, ArpHdr* arpHdr, Mac* mac, Ip* ip);
+    bool processIp(EthHdr* ethHdr, IpHdr* ipHdr, Mac* mac, Ip* ip);
 
 public slots:
-    void captured(GPacket* packet);
+    void captured(Packet* packet);
 
 signals:
     void hostDetected(Host* host);
