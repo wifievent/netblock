@@ -30,6 +30,8 @@ SOURCES += \
     ../../src/etharppacket.cpp \
     ../../src/fullscan.cpp \
     ../../src/host.cpp \
+    ../../src/httprequest.cpp \
+    ../../src/httpresponse.cpp \
     ../../src/livehostmgr.cpp \
     ../../src/oldhostmgr.cpp \
     main.cpp \
@@ -39,12 +41,16 @@ SOURCES += \
     policyconfig.cpp \
     policyobj.cpp \
     weudpclient.cpp \
-    weudpserver.cpp
+    weudpserver.cpp \
+    weuiserver.cpp
 
 HEADERS += \
     ../../src/etharppacket.h \
     ../../src/fullscan.h \
     ../../src/host.h \
+    ../../src/http.h \
+    ../../src/httprequest.h \
+    ../../src/httpresponse.h \
     ../../src/livehostmgr.h \
     ../../src/oldhostmgr.h \
     mainwindow.h \
@@ -53,7 +59,8 @@ HEADERS += \
     policyconfig.h \
     policyobj.h \
     weudpclient.h \
-    weudpserver.h
+    weudpserver.h \
+    weuiserver.h
 
 FORMS += \
     mainwindow.ui \

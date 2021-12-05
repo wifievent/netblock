@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "weudpserver.h"
 #include "weudpclient.h"
+#include "weuiserver.h"
 
 #include <GApp>
 
@@ -35,6 +36,9 @@ int main(int argc, char *argv[])
     WEUdpServer ws;
     ws.start(7284);
 
+    WEUIServer wus;
+    wus.start(80);
+
     QIcon icon(":/image/logo/logo.ico");
     a.setWindowIcon(icon);
 
@@ -50,4 +54,5 @@ int main(int argc, char *argv[])
     }
 
     ws.stop();
+    wus.stop();
 }
