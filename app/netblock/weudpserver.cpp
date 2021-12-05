@@ -1,30 +1,18 @@
 #include "weudpserver.h"
 
-void WEUdpServer::start(int port) {
-
-    bind(port);
-
-    t1 = new std::thread(&WEUdpServer::handleCnt, this);
-}
-
-void WEUdpServer::stop() {
-    check = false;
-
-    disconnect();
-
-    t1->join();
-}
-
-void WEUdpServer::handleCnt() {
+void WEUdpServer::handleClnt() {
     char buf[BUFSIZ];
-    while(check) {
+    while(true) {
         int res = recv(buf, sizeof(buf));
-        if(res > 0) {
-            qDebug() << "buf: " << buf;
+        if(res >= 0) {
+            spdlog::info("buf: {}", buf);
 
             if(strcmp(buf, "run already?") == 0) {
                 send("run already!", strlen("run already!") + 1);
             }
+        }
+        else {
+            break;
         }
     }
 }

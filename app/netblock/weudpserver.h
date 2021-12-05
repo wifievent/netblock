@@ -9,14 +9,7 @@ public:
     WEUdpServer() {}
     ~WEUdpServer() {}
 
-    bool check = true;
-
-    std::thread* t1;
-
-    void start(int port);
-    void stop();
-
-    void handleCnt();
+    void handleClnt() override;
 };
 
 #endif // WEUDPSERVER_H
