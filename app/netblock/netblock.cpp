@@ -126,8 +126,8 @@ bool NetBlock::doOpen()
         return false;
     }
 
-    dbUpdateThread_.start();
-    infectThread_.start();
+    dbUpdateThread_ = new std::thread(&NetBlock::dbUpdateRun, this);
+    infectThread_ = new std::thread(&NetBlock::infectRun, this);
 
     qDebug() << QString("open success");
 
@@ -144,17 +144,10 @@ bool NetBlock::doClose()
     lhm_.close();
     device_.close();
 
-    we_.wakeAll();
-    dbUpdateThread_.we_.wakeAll();
-    infectThread_.we_.wakeAll();
-    if (!dbUpdateThread_.wait())
-    {
-        qCritical() << "thread_.wait return false";
-    }
-    if (!infectThread_.wait())
-    {
-        qCritical() << "thread_.wait return false";
-    }
+    dbCv_.notify_all();
+    infectCv_.notify_all();
+    dbUpdateThread_->join();
+    infectThread_->join();
 
     ouiDB_.close();
     nbDB_.close();
@@ -343,29 +336,30 @@ void NetBlock::sendRecover(Host host)
     }
 }
 
-void NetBlock::DBUpdateThread::run()
+void NetBlock::dbUpdateRun()
 {
-    NetBlock *netBlock = dynamic_cast<NetBlock *>(parent());
-    while (netBlock->active())
+    while(active())
     {
-        netBlock->updateHosts();
-
-        if (!netBlock->active())
+        updateHosts();
+        if(!active())
             break;
-        if (we_.wait(netBlock->nbUpdateTime_))
+
+        std::unique_lock<std::mutex> lock(dbMutex_);
+        if(dbCv_.wait_for(lock,std::chrono::milliseconds(nbUpdateTime_)) == std::cv_status::no_timeout)
             break;
     }
 }
 
-void NetBlock::InfectThread::run()
+void NetBlock::infectRun()
 {
-    NetBlock *netBlock = dynamic_cast<NetBlock *>(parent());
-    while (netBlock->active())
+    while(active())
     {
-        netBlock->block();
-        if (!netBlock->active())
+        block();
+        if(!active())
             break;
-        if (we_.wait(netBlock->infectSleepTime_))
+
+        std::unique_lock<std::mutex> lock(infectMutex_);
+        if(infectCv_.wait_for(lock,std::chrono::milliseconds(infectSleepTime_)) == std::cv_status::no_timeout)
             break;
     }
 }

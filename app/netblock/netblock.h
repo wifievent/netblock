@@ -7,6 +7,10 @@
 #include "livehostmgr.h"
 
 
+#include <thread>
+#include <mutex>
+
+#include "stateobj.h"
 #include "pcapdevice.h"
 
 struct LockableSqlDatabase : QSqlDatabase {
@@ -69,19 +73,15 @@ protected:
 
     void run();
 
-    struct DBUpdateThread: GThread {
-        DBUpdateThread(QObject *parent) : GThread(parent) {}
-        ~DBUpdateThread() {}
-        GWaitEvent we_;
-        void run() override;
-    } dbUpdateThread_{this};
+    std::thread* dbUpdateThread_;
+    std::mutex dbMutex_;
+    std::condition_variable dbCv_;
+    void dbUpdateRun();
 
-    struct InfectThread: GThread {
-        InfectThread(QObject *parent) : GThread(parent) {}
-        ~InfectThread() {}
-        GWaitEvent we_;
-        void run() override;
-    } infectThread_{this};
+    std::thread* infectThread_;
+    std::mutex infectMutex_;
+    std::condition_variable infectCv_;
+    void infectRun();
 
 public:
     void propLoad(QJsonObject jo) override;
