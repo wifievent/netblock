@@ -237,3 +237,9 @@ string HTTPResponse::updateCursor(size_t& cursorbegin, size_t& cursorend, string
     cursorbegin = cursorend + next;
     return result;
 }
+
+void HTTPResponse::resetData()
+{
+    responsepacket_ = "";
+    headers_.clear();
+}

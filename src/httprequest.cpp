@@ -81,7 +81,7 @@ string HTTPRequest::getHTTPHeader(string name)
     {
         if((*iter).first == name)
         {
-            return (*iter).first + ":" + (*iter).second;
+            return (*iter).second;
         }
     }
     return "There is no header name " + name;
@@ -248,4 +248,10 @@ string HTTPRequest::updateCursor(size_t& cursorbegin, size_t& cursorend, string 
     result = obj.substr(cursorbegin, cursorend - cursorbegin);
     cursorbegin = cursorend + next;
     return result;
+}
+
+void HTTPRequest::resetData()
+{
+    requestpacket_ = "";
+    headers_.clear();
 }

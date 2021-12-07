@@ -13,17 +13,26 @@ void WEUIServer::handleClnt(TcpClientSocket *clntsock) {
             spdlog::info("clntsock is shutdown");
             return;
         }
+        uirequest_.resetData();
         uirequest_.addRequestPacket(buffer, len);
         uirequest_.parseRequestPacket();
-        spdlog::info("recv data from client\n{}", *(uirequest_.getRequestData()));
-        setHttpResponse();
+        setHttpResponse(uirequest_.getURL());
         clntsock->send((char*)uiresponse_.getResponseData()->c_str(), uiresponse_.getResponseSize());
     }
     return;
 }
 
-void WEUIServer::setHttpResponse() {
-    int size = getWebUIData();
+void WEUIServer::setHttpResponse(std::string path) {
+    uiresponse_.resetData();
+    int size = 0;
+    spdlog::info("request path: {}", path);
+
+    if(path == "/") {
+        size = getWebUIData("/index.html");
+    }
+    else {
+        size = getWebUIData(path);
+    }
 
     std::string len = std::to_string(size);
 
@@ -40,12 +49,12 @@ void WEUIServer::setHttpResponse() {
     uiresponse_.setReasonPhrase();
     uiresponse_.setHTTPHeaderVector(&headervector);
     uiresponse_.setResponseBody(ui_);
-    spdlog::info("make Response packet\n{}", *(uiresponse_.getResponseData()));
     uiresponse_.makeResponse();
 }
 
-int WEUIServer::getWebUIData() {
-    std::ifstream fin("index.html");
+int WEUIServer::getWebUIData(std::string path) {
+    spdlog::info("Get local data from\n{}", rootdir_+path);
+    std::ifstream fin(rootdir_+path);
     int size = 0;
 
     if(fin.is_open()){
@@ -53,7 +62,6 @@ int WEUIServer::getWebUIData() {
         size = fin.tellg();
         fin.seekg(0, std::ios::beg);
         fin.read(ui_, size);
-        spdlog::info("HTML file contents\n{}", ui_);
     }
     return size;
 }

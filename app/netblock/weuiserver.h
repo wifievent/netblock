@@ -14,12 +14,15 @@ class WEUIServer : public TcpServer
     char ui_[BUFSIZE];
 
 public:
+    std::string rootdir_;
+
+public:
     WEUIServer();
     ~WEUIServer() {}
 
 protected:
     void handleClnt(TcpClientSocket* clntsock) override;
-    void setHttpResponse();
-    int getWebUIData();
+    void setHttpResponse(std::string path);
+    int getWebUIData(std::string path);
     std::string getDateTime();
 };

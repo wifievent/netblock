@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     ws.start(7284);
 
     WEUIServer wus;
+    wus.rootdir_ = "./test";
     wus.start(80);
 
     QIcon icon(":/image/logo/logo.ico");
