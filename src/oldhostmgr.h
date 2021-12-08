@@ -8,32 +8,66 @@
 #include <mutex>
 #include "host.h"
 #include "etharppacket.h"
+#include "stateobj.h"
 
-struct OldHostMgr;
+struct StdOldHostMgr;
 
 class testActiveScanThread : std::thread {
 public:
-    testActiveScanThread(OldHostMgr* ohm, Host* host): std::thread(&testActiveScanThread::run, this) {}
+    testActiveScanThread(StdOldHostMgr* ohm, Host* host): std::thread(&testActiveScanThread::run, this) {}
     void run();
 };
 
-struct stdActiveScanThread : std::thread {
-    stdActiveScanThread(OldHostMgr* ohm, Host* host) : std::thread(&stdActiveScanThread::run, this), ohm_(ohm), host_(host) {}
-    ~stdActiveScanThread();
+struct StdActiveScanThread : std::thread {
+    StdActiveScanThread(StdOldHostMgr* ohm, Host* host) : std::thread(&StdActiveScanThread::run, this), ohm_(ohm), host_(host) {}
+    ~StdActiveScanThread();
 
     void run();
 
-    OldHostMgr* ohm_{nullptr};
+    StdOldHostMgr* ohm_{nullptr};
     Host* host_{nullptr};
 
     std::mutex myMutex_;
     std::condition_variable myCv_;
 };
 
-struct stdActiveScanThreadMap: std::map<Mac, stdActiveScanThread*> {
+struct StdActiveScanThreadMap: std::map<Mac, StdActiveScanThread*> {
     QMutex m_;
 };
 
+struct StdLiveHostMgr;
+struct StdOldHostMgr : StateObj
+{
+public:
+    int checkSleepTime_{10000}; // 10 secs
+    int scanStartTimeout_{60000}; // 60 secs
+    int sendSleepTime_{1000}; // 1 sec
+    int deleteTimeout_{10000}; // 10 secs
+
+public:
+    StdOldHostMgr() {}
+    ~StdOldHostMgr() override;
+
+protected:
+    bool doOpen() override;
+    bool doClose() override;
+
+public:
+    StdLiveHostMgr* lhm_{nullptr}; // reference
+
+    StdActiveScanThreadMap astm_;
+
+    StdActiveScanThreadMap sastm_;
+
+    std::thread* myThread_;
+    std::mutex myMutex_;
+    std::condition_variable myCv_;
+
+protected:
+    void run();
+};
+
+struct OldHostMgr;
 struct ActiveScanThread : GThread {
 	ActiveScanThread(OldHostMgr* ohm, Host* host);
 	~ActiveScanThread() override;
@@ -77,7 +111,7 @@ public:
     ActiveScanThreadMap astm_;
     GWaitEvent we_;
 
-    stdActiveScanThreadMap sastm_;
+    StdActiveScanThreadMap sastm_;
 
     std::thread* myThread_;
     std::mutex myMutex_;

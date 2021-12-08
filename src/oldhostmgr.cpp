@@ -1,7 +1,7 @@
 #include "oldhostmgr.h"
 #include "livehostmgr.h"
 
-void stdActiveScanThread::run() {
+void StdActiveScanThread::run() {
     // qDebug() << "beg";
     PcapDevice* device = ohm_->lhm_->device_;
     Intf* intf = device->intf();
@@ -60,7 +60,7 @@ void stdActiveScanThread::run() {
         }
     }
 
-    stdActiveScanThreadMap* sastm = &ohm_->sastm_;
+    StdActiveScanThreadMap* sastm = &ohm_->sastm_;
     QMutexLocker ml(&sastm->m_);
     int res = sastm->erase(host_->mac_);
     if (res != 1) {
@@ -177,10 +177,10 @@ void OldHostMgr::run() {
 				// qDebug() << QString("lastAccess=%1 now=%2 diff=%3").arg(host.lastAccess_).arg(now).arg(now-host.lastAccess_); // gilgil temp 2021.10.24
 				if (host.lastAccess_ + scanStartTimeout_ < now) {
                     QMutexLocker ml(&sastm_.m_);
-                    stdActiveScanThreadMap::iterator it = sastm_.find(host.mac_);
+                    StdActiveScanThreadMap::iterator it = sastm_.find(host.mac_);
                     if (it == sastm_.end()) {
-                        stdActiveScanThread* sast = new stdActiveScanThread(this, &host);
-                        sastm_.insert(std::pair<Mac, stdActiveScanThread*>(host.mac_, sast));
+                        StdActiveScanThread* sast = new StdActiveScanThread(this, &host);
+                        sastm_.insert(std::pair<Mac, StdActiveScanThread*>(host.mac_, sast));
 					}
 				}
 			}
@@ -203,4 +203,33 @@ void OldHostMgr::MyThread::run() {
     OldHostMgr* ohm = dynamic_cast<OldHostMgr*>(parent());
     Q_ASSERT(ohm != nullptr);
     ohm->run();
+}
+
+void StdOldHostMgr::run()
+{
+    qDebug() << "beg";
+
+    QElapsedTimer et;
+    while (active()) {
+        {
+            QMutexLocker ml(&lhm_->hosts_.m_);
+            qint64 now = et.elapsed();
+            for (Host& host : lhm_->hosts_) {
+                // qDebug() << QString("lastAccess=%1 now=%2 diff=%3").arg(host.lastAccess_).arg(now).arg(now-host.lastAccess_); // gilgil temp 2021.10.24
+                if (host.lastAccess_ + scanStartTimeout_ < now) {
+                    QMutexLocker ml(&sastm_.m_);
+                    StdActiveScanThreadMap::iterator it = sastm_.find(host.mac_);
+                    if (it == sastm_.end()) {
+                        StdActiveScanThread* sast = new StdActiveScanThread(this, &host);
+                        sastm_.insert(std::pair<Mac, StdActiveScanThread*>(host.mac_, sast));
+                    }
+                }
+            }
+        }
+
+        std::unique_lock<std::mutex> lock(myMutex_);
+        if(myCv_.wait_for(lock,std::chrono::milliseconds(sendSleepTime_)) == std::cv_status::no_timeout) break;
+    }
+
+    qDebug() << "end";
 }

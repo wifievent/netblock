@@ -38,7 +38,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::processHostDetected(Host *host)
 {
-	qDebug() << QString("%1 %2 %3 %4").arg(QString(host->mac_), QString(host->ip_), host->hostName_, host->nickName_);
+    qDebug() << QString("%1 %2 %3 %4").arg(QString(std::string(host->mac_).data()), QString(std::string(host->ip_).data()), host->hostName_, host->nickName_);
     DInfo tmp(*host);
     tmp.isConnect_ = true;
 
@@ -77,7 +77,7 @@ void MainWindow::processHostDetected(Host *host)
         {
             QMutexLocker ml(&nb_.nbDBLock_);
             nbQuery.prepare("UPDATE host SET last_ip=:last_ip WHERE host_id = :host_id");
-            nbQuery.bindValue(":last_ip", QString(tmp.ip_));
+            nbQuery.bindValue(":last_ip", QString(std::string(tmp.ip_).data()));
             nbQuery.bindValue(":host_id", iter->hostId_);
             nbQuery.exec();
             iter->ip_ = tmp.ip_;
@@ -91,7 +91,7 @@ void MainWindow::processHostDetected(Host *host)
         {
             QMutexLocker ml(&nb_.ouiDBLock_);
             ouiQuery.prepare("SELECT organ FROM oui WHERE substr(mac, 1, 8) = substr(:mac, 1, 8)");
-            ouiQuery.bindValue(":mac", QString(tmp.mac_));
+            ouiQuery.bindValue(":mac", QString(std::string(tmp.mac_).data()));
             ouiQuery.exec();
 
             while (ouiQuery.next())
@@ -105,8 +105,8 @@ void MainWindow::processHostDetected(Host *host)
         {
             QMutexLocker ml(&nb_.nbDBLock_);
             nbQuery.prepare("INSERT INTO host(mac, last_ip, host_name, nick_name, oui) VALUES(:mac, :last_ip, :host_name, :nick_name, :oui)");
-            nbQuery.bindValue(":mac", QString(tmp.mac_));
-            nbQuery.bindValue(":last_ip", QString(tmp.ip_));
+            nbQuery.bindValue(":mac", QString(std::string(tmp.mac_).data()));
+            nbQuery.bindValue(":last_ip", QString(std::string(tmp.ip_).data()));
             nbQuery.bindValue(":host_name", tmp.hostName_);
             nbQuery.bindValue(":nick_name", tmp.nickName_);
             nbQuery.bindValue(":oui", tmp.oui_);
@@ -116,7 +116,7 @@ void MainWindow::processHostDetected(Host *host)
         {
             QMutexLocker ml(&nb_.nbDBLock_);
             nbQuery.prepare("SELECT host_id FROM host WHERE mac=:mac");
-            nbQuery.bindValue(":mac", QString(tmp.mac_));
+            nbQuery.bindValue(":mac", QString(std::string(tmp.mac_).data()));
             nbQuery.exec();
 
             nbQuery.next();
@@ -138,7 +138,7 @@ void MainWindow::processHostDetected(Host *host)
 
 void MainWindow::processHostDeleted(Host *host)
 {
-	qDebug() << QString("%1 %2 %3 %4").arg(QString(host->mac_), QString(host->ip_), host->hostName_, host->nickName_);
+    qDebug() << QString("%1 %2 %3 %4").arg(QString(std::string(host->mac_).data()), QString(std::string(host->ip_).data()), host->hostName_, host->nickName_);
     DInfo tmp(*host);
     for (DInfoList::iterator iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter)
     {
@@ -162,8 +162,8 @@ void MainWindow::setDevInfoFromDatabase()
         {
             DInfo tmp;
             tmp.hostId_ = nbQuery.value(0).toInt();
-            tmp.mac_ = GMac(nbQuery.value(1).toString());
-            tmp.ip_ = GIp(nbQuery.value(2).toString());
+            tmp.mac_ = Mac(nbQuery.value(1).toString().toStdString());
+            tmp.ip_ = Ip(nbQuery.value(2).toString().toStdString());
             tmp.hostName_ = nbQuery.value(3).toString();
             tmp.nickName_ = nbQuery.value(4).toString();
             tmp.oui_ = nbQuery.value(5).toString();
@@ -207,7 +207,7 @@ void MainWindow::setDevTableItem()
             btn->setStyleSheet("QPushButton { margin: 4px; background-color: gray; width: 20px; border-color: black; border-width: 1px; border-radius: 10px; }");
             ui->devTable->setCellWidget(i, 0, btn);
         }
-        ui->devTable->setItem(i, 1, new QTableWidgetItem(QString(iter->ip_)));
+        ui->devTable->setItem(i, 1, new QTableWidgetItem(QString(std::string(iter->ip_).data())));
         ui->devTable->setItem(i, 2, new QTableWidgetItem(iter->defaultName()));
     }
     resetHostFilter();
@@ -279,11 +279,11 @@ void MainWindow::setListWidgetItem(QString str)
     }
     else if (str == "MAC")
     {
-        val_label->setText(QString(dInfo_->mac_));
+        val_label->setText(QString(std::string(dInfo_->mac_).data()));
     }
     else if (str == "IP")
     {
-        val_label->setText(QString(dInfo_->ip_));
+        val_label->setText(QString(std::string(dInfo_->ip_).data()));
     }
     else if (str == "Host_Name")
     {

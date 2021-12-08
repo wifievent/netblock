@@ -1,6 +1,5 @@
 #include <GApp>
 #include <GJson>
-#include <GPcapDevice>
 #include <QtSql>
 #include <QMutexLocker>
 #include <QMutex>
@@ -52,7 +51,7 @@ public:
 
     void updateHosts();
 
-	LiveHostMgr lhm_{this, &device_};
+    LiveHostMgr lhm_{this, &device_};
 
     QMutex nbDBLock_;
     QMutex ouiDBLock_;
@@ -68,10 +67,17 @@ protected:
 	bool doOpen() override;
 	bool doClose() override;
 
+    void findGatewayMac();
+
     void sendInfect(Host host);
     void sendRecover(Host host);
 
     void run();
+
+    std::thread* captureThread_;
+    std::mutex captureMutex_;
+    std::condition_variable captureCv_;
+    void capture();
 
     std::thread* dbUpdateThread_;
     std::mutex dbMutex_;

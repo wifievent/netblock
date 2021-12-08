@@ -3,7 +3,6 @@
 
 NetBlock::NetBlock(QObject *parent) : GStateObj(parent)
 {
-    QObject::connect(&device_, &GCapture::captured, this, &NetBlock::captured, Qt::DirectConnection);
 }
 
 NetBlock::~NetBlock()
@@ -64,6 +63,65 @@ bool NetBlock::dbCheck()
     return true;
 }
 
+void NetBlock::findGatewayMac()
+{
+    qDebug() << "Find gateway Mac";
+    EthArpPacket packet;
+
+    EthHdr *ethHdr = &packet.ethHdr_;
+    ethHdr->dmac_ = Mac::broadcastMac();
+    ethHdr->smac_ = myMac_;
+    ethHdr->type_ = htons(EthHdr::Arp);
+
+    ArpHdr *arpHdr = &packet.arpHdr_;
+    arpHdr->hrd_ = htons(ArpHdr::ETHER);
+    arpHdr->pro_ = htons(EthHdr::Ip4);
+    arpHdr->hln_ = Mac::SIZE;
+    arpHdr->pln_ = Ip::SIZE;
+    arpHdr->op_ = htons(ArpHdr::Request);
+    arpHdr->smac_ = myMac_;
+    arpHdr->sip_ = myIp_;
+    arpHdr->tmac_ = Mac::nullMac();
+    arpHdr->tip_ = intf_->gateway_;
+
+    Packet::Result gatewayRes = device_.write(Buf(pbyte(&packet), sizeof(packet)));
+    if (gatewayRes != Packet::Ok)
+    {
+        qWarning() << QString("device_->write return %1").arg(int(gatewayRes));
+    }
+
+    while(true)
+    {
+        Packet* readPacket;
+        Packet::Result res = device_.read(readPacket);
+        if (res == Packet::Eof) {
+            break;
+        } else
+        if (res == Packet::Fail) {
+            break;
+        } else
+        if (res == Packet::None) {
+            continue;
+        }
+
+        EthPacket *ethPacket = PEthPacket(readPacket);
+
+        ArpHdr* arpHdr = readPacket->arpHdr_;
+
+        if(arpHdr == nullptr) continue;
+        if(arpHdr->op() != ArpHdr::Reply) continue;
+
+        Ip sIp = arpHdr->sip();
+        Mac sMac = arpHdr->smac();
+
+        if(intf_->gateway() == sIp) {
+            gatewayMac_ = sMac;
+            break;
+        }
+
+    }
+}
+
 bool NetBlock::doOpen()
 {
     qDebug() << getenv("HOME");
@@ -83,20 +141,11 @@ bool NetBlock::doOpen()
     Q_ASSERT(intf_ != nullptr);
     myMac_ = intf_->mac();
     myIp_ = intf_->ip();
-    GAtm atm;
-    atm.intfName_ = device_.intfName_;
-    atm.insert(intf_->gateway(), Mac::nullMac());
-    if (!atm.open())
-    {
-        SET_ERR(GErr::FAIL, "atm.open() return false");
+
+    findGatewayMac();
+    if(gatewayMac_ == Mac::nullMac()) {
         return false;
     }
-    if (!atm.wait())
-    {
-        SET_ERR(GErr::FAIL, "atm.wait() return false");
-        return false;
-    }
-    gatewayMac_ = atm.find(intf_->gateway()).value();
 
     qDebug() << "Gateway:" << QString(std::string(intf_->gateway()).data()) << QString(std::string(gatewayMac_).data());
 
@@ -153,6 +202,18 @@ bool NetBlock::doClose()
     nbDB_.close();
 
     return true;
+}
+
+void NetBlock::capture() {
+    Packet* packet;
+    while(active())
+    {
+        Packet::Result res = device_.read(packet);
+        if(res == Packet::None) continue;
+        if(res == Packet::Eof || res == Packet::Fail) break;
+        captured(packet);
+        lhm_.captured(packet);
+    }
 }
 
 void NetBlock::captured(Packet *packet)
@@ -258,7 +319,7 @@ void NetBlock::sendInfect(Host host)
     EthHdr *ethHdr = &packet.ethHdr_;
     ethHdr->dmac_ = Mac::nullMac();
     ethHdr->smac_ = myMac_;
-    ethHdr->type_ = htons(GEthHdr::Arp);
+    ethHdr->type_ = htons(EthHdr::Arp);
 
     ArpHdr *arpHdr = &packet.arpHdr_;
     arpHdr->hrd_ = htons(ArpHdr::ETHER);

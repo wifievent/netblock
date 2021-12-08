@@ -1,7 +1,6 @@
 #include "livehostmgr.h"
 
 LiveHostMgr::LiveHostMgr(QObject* parent, PcapDevice* pcapDevice) : GStateObj(parent), device_(pcapDevice) {
-	QObject::connect(device_, &GCapture::captured, this, &LiveHostMgr::captured, Qt::DirectConnection);
 }
 
 LiveHostMgr::~LiveHostMgr() {
@@ -41,7 +40,7 @@ bool LiveHostMgr::processDhcp(Packet* packet, Mac* mac, Ip* ip, QString* hostNam
 
     Buf dhcp = packet->udpData_;
 	if (dhcp.data_ == nullptr) return false;
-	if (dhcp.size_ < sizeof(GDhcpHdr)) return false;
+    if (dhcp.size_ < sizeof(DhcpHdr)) return false;
     DhcpHdr* dhcpHdr = PDhcpHdr(dhcp.data_);
 
 	bool ok = false;
@@ -56,11 +55,11 @@ bool LiveHostMgr::processDhcp(Packet* packet, Mac* mac, Ip* ip, QString* hostNam
 	gbyte* end = packet->buf_.data_ + packet->buf_.size_;
     DhcpHdr::Option* option = dhcpHdr->first();
 	while (true) {
-		if (option->type_ == GDhcpHdr::RequestedIpAddress) {
+        if (option->type_ == DhcpHdr::RequestedIpAddress) {
 			*ip = ntohl(*PIp(option->value()));
 			*mac = ethHdr->smac();
 			ok = true;
-		} else if (option->type_ == GDhcpHdr::HostName) {
+        } else if (option->type_ == DhcpHdr::HostName) {
 			for (int i = 0; i < option->len_; i++)
 				*hostName += *(pchar(option->value()) + i);
 		}
@@ -95,6 +94,7 @@ bool LiveHostMgr::processIp(EthHdr* ethHdr, IpHdr* ipHdr, Mac* mac, Ip* ip) {
 }
 
 void LiveHostMgr::captured(Packet* packet) {
+
     Mac mac;
     Ip ip;
 	QString hostName;
