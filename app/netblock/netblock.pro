@@ -9,6 +9,8 @@ include(../../../g/g.pri)
 INCLUDEPATH *= ../../src
 DESTDIR = ../../bin
 
+LIBS *= -lgolg
+
 LIBS *= -L$${PWD}/../../../opensocket/lib -lopensocket
 INCLUDEPATH *= $${PWD}/../../../opensocket/external
 INCLUDEPATH *= $${PWD}/../../../opensocket/src
@@ -27,6 +29,8 @@ RC_ICONS += logo.ico
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    ../../src/dbconnect.cpp \
+    ../../src/sqlite/sqlite.c \
     ../../src/etharppacket.cpp \
     ../../src/fullscan.cpp \
     ../../src/host.cpp \
@@ -42,6 +46,8 @@ SOURCES += \
     weudpserver.cpp
 
 HEADERS += \
+    ../../src/dbconnect.h \
+    ../../src/sqlite/sqlite3.h \
     ../../src/etharppacket.h \
     ../../src/fullscan.h \
     ../../src/host.h \

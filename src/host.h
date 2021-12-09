@@ -37,7 +37,7 @@ struct StdHost
     Ip ip_;
     std::string hostName_;
     std::string nickName_;
-    qint64 lastAccess_{0};
+    long lastAccess_{0};
     std::string defaultName();
 };
 
