@@ -11,11 +11,13 @@
 #include "policyobj.h"
 #include "policyconfig.h"
 
+#include "appjson.h"
+
 namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QMainWindow, GProp
+class MainWindow : public QMainWindow, StateObj
 {
     Q_OBJECT
 
@@ -26,9 +28,9 @@ public:
     bool openCheck;
 
 public slots:
-    void processHostDetected(Host* host);
+    void processHostDetected(StdHost* host);
 
-    void processHostDeleted(Host* host);
+    void processHostDeleted(StdHost* host);
 
 private slots:
     void on_devTable_cellClicked(int row, int column);
@@ -83,8 +85,8 @@ private:
     void setItemPolicy(int row, int column, int policyId, int span);
     void setPolicyTable();
 
-	void propLoad(QJsonObject jo) override;
-	void propSave(QJsonObject& jo) override;
+    void load(Json::Value& json) override;
+    void save(Json::Value& json) override;
 };
 
 #endif // MAINWINDOW_H

@@ -8,6 +8,7 @@
 #include <mutex>
 #include "host.h"
 #include "etharppacket.h"
+#include "appjson.h"
 #include "stateobj.h"
 
 struct StdOldHostMgr;
@@ -56,6 +57,8 @@ public:
     std::mutex myMutex_;
     std::condition_variable myCv_;
 
+    void load(Json::Value& json) override;
+    void save(Json::Value& json) override;
 protected:
     void run();
 };

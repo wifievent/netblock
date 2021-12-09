@@ -119,3 +119,19 @@ void StdOldHostMgr::run()
 
     DLOG(INFO) << "end";
 }
+
+void StdOldHostMgr::load(Json::Value &json)
+{
+    json["checkSleepTime"] >> checkSleepTime_;
+    json["scanStartTimeout"] >> scanStartTimeout_;
+    json["sendSleepTime"] >> sendSleepTime_;
+    json["deleteTimeout"] >> deleteTimeout_;
+}
+
+void StdOldHostMgr::save(Json::Value &json)
+{
+    json["checkSleepTime"] << checkSleepTime_;
+    json["scanStartTimeout"] << scanStartTimeout_;
+    json["sendSleepTime"] << sendSleepTime_;
+    json["deleteTimeout"] << deleteTimeout_;
+}

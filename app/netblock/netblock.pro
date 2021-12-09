@@ -5,7 +5,6 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
 
-include(../../../g/g.pri)
 INCLUDEPATH *= ../../src
 DESTDIR = ../../bin
 
@@ -30,7 +29,7 @@ RC_ICONS += logo.ico
 
 SOURCES += \
     ../../src/dbconnect.cpp \
-    ../../src/sqlite/sqlite.c \
+    ../../src/sqlite/sqlite3.c \
     ../../src/etharppacket.cpp \
     ../../src/fullscan.cpp \
     ../../src/host.cpp \

@@ -1,16 +1,15 @@
 #include <GApp>
-#include <GJson>
 #include <QtSql>
-#include <QMutexLocker>
-#include <QMutex>
 #include "livehostmgr.h"
-
 
 #include <thread>
 #include <mutex>
 
+#include "appjson.h"
 #include "stateobj.h"
 #include "pcapdevice.h"
+
+#include "dbconnect.h"
 
 struct LockableSqlDatabase : QSqlDatabase {
     QMutex m_;
@@ -20,7 +19,7 @@ struct LockableSqlDatabase : QSqlDatabase {
     }
 };
 
-struct NetBlock : GStateObj {
+struct NetBlock : StateObj {
     Q_OBJECT
     Q_PROPERTY(int sendSleepTime MEMBER sendSleepTime_)
     Q_PROPERTY(int nbUpdateTime MEMBER nbUpdateTime_)
@@ -40,18 +39,21 @@ private:
     Mac myMac_{Mac::nullMac()};
     Ip myIp_;
 
-    HostMap nbHosts_;
-    HostMap nbNewHosts_;
+    StdHostMap nbHosts_;
+    StdHostMap nbNewHosts_;
 
     bool dbCheck();
 
 public:
-    NetBlock(QObject* parent = nullptr);
-    ~NetBlock();
+    NetBlock() {};
+    ~NetBlock() { close(); };
 
     void updateHosts();
 
     StdLiveHostMgr lhm_{&device_};
+
+    DBConnect* nbConnect_;
+    DBConnect* ouiConnect_;
 
     QMutex nbDBLock_;
     QMutex ouiDBLock_;
@@ -69,10 +71,13 @@ protected:
 
     void findGatewayMac();
 
-    void sendInfect(Host host);
-    void sendRecover(Host host);
+    void sendInfect(StdHost host);
+    void sendRecover(StdHost host);
 
     void run();
+
+    std::mutex blockMutex_;
+    std::condition_variable blockCv_;
 
     std::thread* captureThread_;
     std::mutex captureMutex_;
@@ -90,6 +95,6 @@ protected:
     void infectRun();
 
 public:
-    void propLoad(QJsonObject jo) override;
-    void propSave(QJsonObject& jo) override;
+    void load(Json::Value& json) override;
+    void save(Json::Value& json) override;
 };

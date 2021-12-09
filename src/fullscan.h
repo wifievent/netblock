@@ -4,6 +4,8 @@
 #include <mutex>
 #include "pcapdevice.h"
 
+#include "appjson.h"
+
 struct StdFullScan : StateObj
 {
 
@@ -15,6 +17,9 @@ public:
     ~StdFullScan() {close();}
 
     PcapDevice* device_{nullptr}; // reference
+
+    void load(Json::Value& json) override;
+    void save(Json::Value& json) override;
 
 protected:
     bool doOpen() override;

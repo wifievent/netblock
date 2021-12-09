@@ -6,9 +6,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 {
     ui->setupUi(this);
 
-    connect(&nb_.lhm_, &LiveHostMgr::hostDetected, this, &MainWindow::processHostDetected, Qt::BlockingQueuedConnection);
-    connect(&nb_.lhm_, &LiveHostMgr::hostDeleted, this, &MainWindow::processHostDeleted, Qt::BlockingQueuedConnection);
+    connect(&nb_.lhm_, &StdLiveHostMgr::hostDetected, this, &MainWindow::processHostDetected, Qt::BlockingQueuedConnection);
+    connect(&nb_.lhm_, &StdLiveHostMgr::hostDeleted, this, &MainWindow::processHostDeleted, Qt::BlockingQueuedConnection);
 
+    Json::Value jv;
+    if(AppJson::loadFromFile("netblock.json", jv))
+    {
+        *this << jv["MainWindow"];
+        jv["MainWindow"] >> *this;
+    }
+    AppJson aj = AppJson::loadFromFile();
     QJsonObject jo = GJson::loadFromFile();
     jo["MainWindow"] >> *this;
     jo["NetBlock"] >> nb_;

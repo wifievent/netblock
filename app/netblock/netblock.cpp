@@ -1,71 +1,45 @@
 #include "netblock.h"
 #include <GAtm>
 
-NetBlock::NetBlock(QObject *parent) : GStateObj(parent)
-{
-}
-
-NetBlock::~NetBlock()
-{
-    close();
-}
+#include <glog/logging.h>
 
 bool NetBlock::dbCheck()
 {
-    qDebug() << QString("Start dbCheck Function");
+    DLOG(INFO) << "Start dbCheck Function";
 
     QSqlQuery nbQuery(nbDB_);
-    QString result;
 
+    std::list<DataList> result;
+    result = nbConnect_->selectQuery("SELECT name FROM sqlite_master WHERE name = 'host'");
+    if(result.size() == 0)
     {
-        QMutexLocker ml(&nbDBLock_);
-        nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'host'");
-
-        nbQuery.next();
-        result = nbQuery.value(0).toString();
+        DLOG(INFO) << "Create host table";
+        nbConnect_->sendQuery("CREATE TABLE host (host_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, mac CHAR(17) NOT NULL, last_ip VARCHAR(15) NULL, host_name VARCHAR(30) NULL, nick_name VARCHAR(30) NULL, oui VARCHAR(20) NULL)");
     }
-    if (result.compare("host"))
+    result.clear();
+
+    result = nbConnect_->selectQuery("SELECT name FROM sqlite_master WHERE name = 'policy'");
+    if(result.size() == 0)
     {
-        qDebug() << QString("Create host table");
-        QMutexLocker ml(&nbDBLock_);
-        nbQuery.exec("CREATE TABLE host (host_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, mac CHAR(17) NOT NULL, last_ip VARCHAR(15) NULL, host_name VARCHAR(30) NULL, nick_name VARCHAR(30) NULL, oui VARCHAR(20) NULL)");
+        DLOG(INFO) << "Create policy table";
+        nbConnect_->sendQuery("CREATE TABLE policy (policy_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, host_id INTEGER NOT NULL, start_time CHAR(4) NOT NULL, end_time CHAR(4) NOT NULL, day_of_the_week TINYINT NOT NULL)");
     }
+    result.clear();
 
+    result = nbConnect_->selectQuery("SELECT name FROM sqlite_master WHERE name = 'block_host'");
+    if(result.size() == 0)
     {
-        QMutexLocker ml(&nbDBLock_);
-        nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'policy'");
-
-        nbQuery.next();
-        result = nbQuery.value(0).toString();
+        DLOG(INFO) << "Create block_host view";
+        nbConnect_->sendQuery("CREATE VIEW block_host as SELECT mac, last_ip, host_name FROM host WHERE host_id in (SELECT host_id from policy where strftime(\"%H%M\", 'now', 'localtime') BETWEEN start_time AND end_time AND strftime(\"%w\", 'now', 'localtime') = day_of_the_week)");
     }
-    if (result.compare("policy"))
-    {
-        qDebug() << QString("Create policy table");
-        QMutexLocker ml(&nbDBLock_);
-        nbQuery.exec("CREATE TABLE policy (policy_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, host_id INTEGER NOT NULL, start_time CHAR(4) NOT NULL, end_time CHAR(4) NOT NULL, day_of_the_week TINYINT NOT NULL)");
-    }
-
-    {
-        QMutexLocker ml(&nbDBLock_);
-        nbQuery.exec("SELECT name FROM sqlite_master WHERE name = 'block_host'");
-
-        nbQuery.next();
-        result = nbQuery.value(0).toString();
-    }
-
-    if (result.compare("block_host"))
-    {
-        qDebug() << QString("Create block_host view");
-        QMutexLocker ml(&nbDBLock_);
-        nbQuery.exec("CREATE VIEW block_host as SELECT mac, last_ip, host_name FROM host WHERE host_id in (SELECT host_id from policy where strftime(\"%H%M\", 'now', 'localtime') BETWEEN start_time AND end_time AND strftime(\"%w\", 'now', 'localtime') = day_of_the_week)");
-    }
+    result.clear();
 
     return true;
 }
 
 void NetBlock::findGatewayMac()
 {
-    qDebug() << "Find gateway Mac";
+    DLOG(INFO) << "Find gateway mac";
     EthArpPacket packet;
 
     EthHdr *ethHdr = &packet.ethHdr_;
@@ -104,8 +78,6 @@ void NetBlock::findGatewayMac()
             continue;
         }
 
-        EthPacket *ethPacket = PEthPacket(readPacket);
-
         ArpHdr* arpHdr = readPacket->arpHdr_;
 
         if(arpHdr == nullptr) continue;
@@ -124,21 +96,18 @@ void NetBlock::findGatewayMac()
 
 bool NetBlock::doOpen()
 {
-    qDebug() << getenv("HOME");
 	if (!device_.open())
     {
-        SET_ERR(GErr::FAIL, "device_.open() return false");
         return false;
     }
 
 	if (!lhm_.open())
 	{
-		qWarning() << QString("lhm.open() return false %1").arg(lhm_.err->msg());
+        DLOG(WARNING) << "lhm.opoen() return false";
 		return false;
 	}
 
     intf_ = device_.intf();
-    Q_ASSERT(intf_ != nullptr);
     myMac_ = intf_->mac();
     myIp_ = intf_->ip();
 
@@ -147,14 +116,27 @@ bool NetBlock::doOpen()
         return false;
     }
 
-    qDebug() << "Gateway:" << QString(std::string(intf_->gateway()).data()) << QString(std::string(gatewayMac_).data());
+    DLOG(INFO) << "Gateway: " << std::string(intf_->gateway()).data() << std::string(gatewayMac_).data();
 
+    ouiConnect_ = new DBConnect(std::string("oui.db"));
+    if(!ouiConnect_->open())
+    {
+        DLOG(WARNING) << "ouiConnect return false";
+        return false;
+    }
     ouiDB_ = QSqlDatabase::addDatabase("QSQLITE", "oui.db");
     ouiDB_.setDatabaseName("oui.db");
     if (!ouiDB_.open())
     {
         qWarning() << QString("ouiDB.open() return false %1").arg(ouiDB_.lastError().text());
         ouiDB_.close();
+        return false;
+    }
+
+    nbConnect_ = new DBConnect(std::string("netblock.db"));
+    if(!nbConnect_->open())
+    {
+        DLOG(WARNING) << "nbConnect return false";
         return false;
     }
     nbDB_ = QSqlDatabase::addDatabase("QSQLITE", "netblock.db");
@@ -185,9 +167,9 @@ bool NetBlock::doOpen()
 
 bool NetBlock::doClose()
 {
-    for (Host &host : nbHosts_)
+    for(StdHostMap::iterator iter = nbHosts_.begin(); iter != nbHosts_.end(); ++iter)
     {
-        sendRecover(host);
+        sendRecover(iter->second);
     }
 
     lhm_.close();
@@ -200,6 +182,13 @@ bool NetBlock::doClose()
 
     ouiDB_.close();
     nbDB_.close();
+
+
+    ouiConnect_->close();
+    nbConnect_->close();
+
+    delete ouiConnect_;
+    delete nbConnect_;
 
     return true;
 }
@@ -237,19 +226,19 @@ void NetBlock::captured(Packet *packet)
     {
 		// qDebug() << "Captured Arp Packet";
         ArpHdr *arpHdr = ethPacket->arpHdr_;
-        HostMap::iterator iter;
+        StdHostMap::iterator iter;
         if ((iter = nbHosts_.find(smac)) != nbHosts_.end() && arpHdr->tip() == intf_->gateway())
         {
-            qDebug() << QString("Host IP: %1").arg(QString(std::string(iter->ip_).data()));
-            sendInfect(*iter);
+            DLOG(INFO) << "Host Ip:" << std::string(iter->second.ip_).data();
+            sendInfect(iter->second);
         }
 
-        for (Host &host : nbHosts_)
+        for (StdHostMap::iterator iter = nbHosts_.begin(); iter != nbHosts_.end(); ++iter)
         {
-            if (arpHdr->tip() == host.ip_ && smac == gatewayMac_)
+            if (arpHdr->tip() == iter->second.ip_ && smac == gatewayMac_)
             {
-                qDebug() << QString("Host IP: %1").arg(QString(std::string(host.ip_).data()));
-                sendInfect(host);
+                DLOG(INFO) << "Host IP:" << std::string(iter->second.ip_).data();
+                sendInfect(iter->second);
                 break;
             }
         }
@@ -260,60 +249,67 @@ void NetBlock::block()
 {
 	//qDebug() << "is block function";
     {
-        QMutexLocker ml(&nbHosts_.m_);
-        for (Host &host : nbHosts_)
+        std::lock_guard<std::mutex> lock(nbHosts_.m_);
+        for(StdHostMap::iterator iter = nbHosts_.begin(); iter != nbHosts_.end(); ++iter)
         {
             {
-                QMutexLocker ml(&lhm_.hosts_.m_);
-                if (lhm_.hosts_.find(host.mac_) != lhm_.hosts_.end())
+                std::lock_guard<std::mutex> lock(lhm_.hosts_.m_);
+                if(lhm_.hosts_.find(iter->second.mac_) != lhm_.hosts_.end())
                 {
-                    sendInfect(host);
+                    sendInfect(iter->second);
                 }
             }
-            if (we_.wait(sendSleepTime_))
-                break;
-            ;
+        }
+        for(const std::pair<Mac, StdHost> host : nbHosts_)
+        {
+            {
+                std::lock_guard<std::mutex> lock(lhm_.hosts_.m_);
+                if(lhm_.hosts_.find(host.second.mac_) != lhm_.hosts_.end())
+                {
+                    sendInfect(host.second);
+                }
+            }
+
+            std::unique_lock<std::mutex> lock(blockMutex_);
+            if(blockCv_.wait_for(lock,std::chrono::milliseconds(sendSleepTime_)) == std::cv_status::no_timeout) break;
         }
     }
 }
 
 void NetBlock::updateHosts()
 {
-    qDebug() << "Update NB Hosts";
+    DLOG(INFO) << "Update NB Hosts";
     /*updateDB*/
-    QSqlQuery nbQuery(nbDB_);
-    {
-        QMutexLocker ml(&nbDBLock_);
-        nbQuery.exec("SELECT * FROM block_host");
+    std::list<DataList> dl = nbConnect_->selectQuery(std::string("SELECT * FROM block_host"));
 
-        while (nbQuery.next())
+    for(DataList dataList : dl)
+    {
+        StdHost host(Mac(dataList.argv_[0]), Ip(dataList.argv_[1]), dataList.argv_[2]);
+        nbNewHosts_.insert(std::pair<Mac, StdHost>(host.mac_, host));
+    }
+
+    for (StdHostMap::iterator iter = nbHosts_.begin(); iter != nbHosts_.end(); ++iter)
+    {
+        std::lock_guard<std::mutex> lock(lhm_.hosts_.m_);
+        if(nbNewHosts_.find(iter->first) == nbNewHosts_.end() && lhm_.hosts_.find(iter->first) != lhm_.hosts_.end())
         {
-            Host host(Mac(nbQuery.value(0).toString().toStdString()), Ip(nbQuery.value(1).toString().toStdString()), nbQuery.value(2).toString());
-            nbNewHosts_.insert(host.mac_, host);
+            sendRecover(iter->second);
+            std::unique_lock<std::mutex> lock(blockMutex_);
+            if(blockCv_.wait_for(lock,std::chrono::milliseconds(sendSleepTime_)) == std::cv_status::no_timeout) return;
+
         }
     }
 
-    for (HostMap::iterator iter = nbHosts_.begin(); iter != nbHosts_.end(); ++iter)
     {
-        QMutexLocker ml(&lhm_.hosts_.m_);
-        if (nbNewHosts_.find(iter.key()) == nbNewHosts_.end() && lhm_.hosts_.find(iter.key()) != lhm_.hosts_.end())
-        {
-            sendRecover(iter.value());
-            if (we_.wait(sendSleepTime_))
-                return;
-        }
-    }
-
-    {
-        QMutexLocker ml(&nbHosts_.m_);
+        std::lock_guard<std::mutex> lock(nbHosts_.m_);
         nbHosts_.swap(nbNewHosts_);
         nbNewHosts_.clear();
     }
 }
 
-void NetBlock::sendInfect(Host host)
+void NetBlock::sendInfect(StdHost host)
 {
-    qDebug() << QString(std::string(host.ip_).data());
+    DLOG(INFO) << "Infect:" << std::string(host.ip_).data();
     EthArpPacket packet;
 
     EthHdr *ethHdr = &packet.ethHdr_;
@@ -338,7 +334,7 @@ void NetBlock::sendInfect(Host host)
     Packet::Result gatewayRes = device_.write(Buf(pbyte(&packet), sizeof(packet)));
     if (gatewayRes != Packet::Ok)
     {
-        qWarning() << QString("device_->write return %1").arg(int(gatewayRes));
+        DLOG(WARNING) << "device_->write return" << int(gatewayRes);
     }
 
     //  target send
@@ -349,19 +345,19 @@ void NetBlock::sendInfect(Host host)
     Packet::Result hostRes = device_.write(Buf(pbyte(&packet), sizeof(packet)));
     if (hostRes != Packet::Ok)
     {
-        qWarning() << QString("device_->write return %1").arg(int(hostRes));
+        DLOG(WARNING) << "device_->write return" << int(hostRes);
     }
 }
 
-void NetBlock::sendRecover(Host host)
+void NetBlock::sendRecover(StdHost host)
 {
-    qDebug() << QString(std::string(host.ip_).data());
+    DLOG(INFO) << "Recover" << std::string(host.ip_).data();
     EthArpPacket packet;
 
     EthHdr *ethHdr = &packet.ethHdr_;
     ethHdr->dmac_ = Mac::nullMac();
     ethHdr->smac_ = myMac_;
-    ethHdr->type_ = htons(GEthHdr::Arp);
+    ethHdr->type_ = htons(EthHdr::Arp);
 
     ArpHdr *arpHdr = &packet.arpHdr_;
     arpHdr->hrd_ = htons(ArpHdr::ETHER);
@@ -381,7 +377,7 @@ void NetBlock::sendRecover(Host host)
     Packet::Result gatewayRes = device_.write(Buf(pbyte(&packet), sizeof(packet)));
     if (gatewayRes != Packet::Ok)
     {
-        qWarning() << QString("device_->write return %1").arg(int(gatewayRes));
+        DLOG(WARNING) << "device_->write return" << int(gatewayRes);
     }
 
     //  target send
@@ -393,7 +389,7 @@ void NetBlock::sendRecover(Host host)
     Packet::Result hostRes = device_.write(Buf(pbyte(&packet), sizeof(packet)));
     if (hostRes != Packet::Ok)
     {
-        qWarning() << QString("device_->write return %1").arg(int(hostRes));
+        DLOG(WARNING)<< "device_->write return" << int(hostRes);
     }
 }
 
@@ -425,16 +421,20 @@ void NetBlock::infectRun()
     }
 }
 
-void NetBlock::propLoad(QJsonObject jo)
+void NetBlock::load(Json::Value &json)
 {
-    GStateObj::propLoad(jo);
-    jo["NBPcapDevice"] >> device_;
-    jo["LiveHostMgr"] >> lhm_;
+    json["sendSleepTime"] >> sendSleepTime_;
+    json["nbUpdateTime"] >> nbUpdateTime_;
+    json["infectSleepTime"] >> infectSleepTime_;
+    device_ << json["NBPcapDevice"];
+    lhm_ << json["LiveHostMgr"];
 }
 
-void NetBlock::propSave(QJsonObject &jo)
+void NetBlock::save(Json::Value &json)
 {
-    GStateObj::propSave(jo);
-    jo["NBPcapDevice"] << device_;
-    jo["LiveHostMgr"] << lhm_;
+    json["sendSleepTime"] << sendSleepTime_;
+    json["nbUpdateTime"] << nbUpdateTime_;
+    json["infectSleepTime"] << infectSleepTime_;
+    device_ >> json["NBPcapDevice"];
+    lhm_ >> json["LiveHostMgr"];
 }

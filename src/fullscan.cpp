@@ -25,7 +25,7 @@ void StdFullScan::run() {
 
     Intf* intf = device_->intf();
     if (intf == nullptr) {
-        qCritical() << "intf is null";
+        DLOG(ERROR) << "intf is null";
         return;
     }
 
@@ -72,4 +72,16 @@ void StdFullScan::run() {
     }
 
     DLOG(INFO) << "end";
+}
+
+
+void StdFullScan::load(Json::Value& json)
+{
+    json["sendSleepTime"] >> sendSleepTime_;
+    json["rescanSleepTime"] >> rescanSleepTime_;
+}
+void StdFullScan::save(Json::Value& json)
+{
+    json["sendSleepTime"] << sendSleepTime_;
+    json["rescanSleepTime"] << rescanSleepTime_;
 }

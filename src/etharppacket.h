@@ -1,8 +1,5 @@
 #pragma once
 
-#include <GEthHdr>
-#include <GArpHdr>
-
 #include "ethhdr.h"
 #include "arphdr.h"
 
