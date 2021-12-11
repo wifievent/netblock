@@ -5,19 +5,19 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
 
+include(../../../opennet/opennet.pri)
 INCLUDEPATH *= ../../src
 DESTDIR = ../../bin
 
-LIBS *= -lgolg
+LIBS *= -lglog
+
+LIBS *= -ldl
+
 
 LIBS *= -L$${PWD}/../../../opensocket/lib -lopensocket
 INCLUDEPATH *= $${PWD}/../../../opensocket/external
 INCLUDEPATH *= $${PWD}/../../../opensocket/src
 PRE_TARGETDEPS *= $${PWD}/../../../opensocket/lib/libopensocket.a
-
-LIBS *= -L$${PWD}/../../../opennet/bin -lOpenNet
-INCLUDEPATH *= $${PWD}/../../../opennet/src
-PRE_TARGETDEPS *= $${PWD}/../../../opennet/bin/libOpenNet.a
 
 RESOURCES += image.qrc
 
@@ -36,11 +36,8 @@ SOURCES += \
     ../../src/livehostmgr.cpp \
     ../../src/oldhostmgr.cpp \
     main.cpp \
-    mainwindow.cpp \
     dinfo.cpp \
     netblock.cpp \
-    policyconfig.cpp \
-    policyobj.cpp \
     weudpclient.cpp \
     weudpserver.cpp
 
@@ -52,17 +49,12 @@ HEADERS += \
     ../../src/host.h \
     ../../src/livehostmgr.h \
     ../../src/oldhostmgr.h \
-    mainwindow.h \
     dinfo.h \
     netblock.h \
-    policyconfig.h \
-    policyobj.h \
     weudpclient.h \
     weudpserver.h
 
-FORMS += \
-    mainwindow.ui \
-    policyconfig.ui
+FORMS +=
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

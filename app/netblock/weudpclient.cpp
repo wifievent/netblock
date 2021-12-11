@@ -1,4 +1,5 @@
 #include "weudpclient.h"
+#include <glog/logging.h>
 
 bool WEUdpClient::searchProduct(int port, int sec, int millisec, std::string protocol)
 {
@@ -22,11 +23,11 @@ bool WEUdpClient::searchProduct(int port, int sec, int millisec, std::string pro
 void WEUdpClient::setSockAddrBroadcast(int port)
 {
     //myIp or !netmask
-    GRtmEntry* entry = GNetInfo::instance().rtm().getBestEntry(QString("8.8.8.8"));
-    GIp broadcastip = entry->intf()->gateway() | ~(entry->intf()->mask());
-    qInfo() << "gateway ip:" << QString(entry->intf()->gateway());
-    qInfo() << "mask:" << QString(entry->intf()->mask());
-    qInfo() << "broadcast ip:" << QString(broadcastip);
-    setSockAddr(QString(broadcastip).toStdString(), port);
+    RtmEntry* entry = NetInfo::instance().rtm().getBestEntry(Ip("8.8.8.8"));
+    Ip broadcastIp = entry->intf()->gateway() | ~(entry->intf()->mask());
+    DLOG(INFO) << "gateway ip:" << std::string(entry->intf()->gateway()).data();
+    DLOG(INFO) << "mask:" << std::string(entry->intf()->mask()).data();
+    DLOG(INFO) << "broadcast ip:"<<std::string(broadcastIp).data();
+    setSockAddr(std::string(broadcastIp), port);
     return;
 }

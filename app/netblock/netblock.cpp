@@ -1,13 +1,10 @@
 #include "netblock.h"
-#include <GAtm>
 
 #include <glog/logging.h>
 
 bool NetBlock::dbCheck()
 {
     DLOG(INFO) << "Start dbCheck Function";
-
-    QSqlQuery nbQuery(nbDB_);
 
     std::list<DataList> result;
     result = nbConnect_->selectQuery("SELECT name FROM sqlite_master WHERE name = 'host'");
@@ -61,7 +58,7 @@ void NetBlock::findGatewayMac()
     Packet::Result gatewayRes = device_.write(Buf(pbyte(&packet), sizeof(packet)));
     if (gatewayRes != Packet::Ok)
     {
-        qWarning() << QString("device_->write return %1").arg(int(gatewayRes));
+        DLOG(WARNING) << "device_->write return" << int(gatewayRes);
     }
 
     while(true)
@@ -96,8 +93,11 @@ void NetBlock::findGatewayMac()
 
 bool NetBlock::doOpen()
 {
+    DLOG(INFO) << "netblock open";
+    device_.intfName_ = std::string("wlan0");
 	if (!device_.open())
     {
+        DLOG(ERROR) << "device do not open";
         return false;
     }
 
@@ -124,14 +124,6 @@ bool NetBlock::doOpen()
         DLOG(WARNING) << "ouiConnect return false";
         return false;
     }
-    ouiDB_ = QSqlDatabase::addDatabase("QSQLITE", "oui.db");
-    ouiDB_.setDatabaseName("oui.db");
-    if (!ouiDB_.open())
-    {
-        qWarning() << QString("ouiDB.open() return false %1").arg(ouiDB_.lastError().text());
-        ouiDB_.close();
-        return false;
-    }
 
     nbConnect_ = new DBConnect(std::string("netblock.db"));
     if(!nbConnect_->open())
@@ -139,18 +131,9 @@ bool NetBlock::doOpen()
         DLOG(WARNING) << "nbConnect return false";
         return false;
     }
-    nbDB_ = QSqlDatabase::addDatabase("QSQLITE", "netblock.db");
     // Windows: FOLDERID_Profile
     //PWSTR path = NULL;
     //SHGetKnownFolderPath(FOLDERID_Profile, 0, NULL, &path); //User directory
-
-    nbDB_.setDatabaseName("~/.config/netblock.db");
-    if (!nbDB_.open())
-    {
-        qWarning() << QString("nbDB.open() return false %1").arg(nbDB_.lastError().text());
-        nbDB_.close();
-        return false;
-    }
 
     if (!dbCheck())
     {
@@ -160,7 +143,7 @@ bool NetBlock::doOpen()
     dbUpdateThread_ = new std::thread(&NetBlock::dbUpdateRun, this);
     infectThread_ = new std::thread(&NetBlock::infectRun, this);
 
-    qDebug() << QString("open success");
+    DLOG(INFO) << "open success";
 
     return true;
 }
@@ -179,10 +162,6 @@ bool NetBlock::doClose()
     infectCv_.notify_all();
     dbUpdateThread_->join();
     infectThread_->join();
-
-    ouiDB_.close();
-    nbDB_.close();
-
 
     ouiConnect_->close();
     nbConnect_->close();
@@ -222,7 +201,7 @@ void NetBlock::captured(Packet *packet)
 #endif
         return;
     }
-    if (ethHdr->type() == GEthHdr::Arp)
+    if (ethHdr->type() == EthHdr::Arp)
     {
 		// qDebug() << "Captured Arp Packet";
         ArpHdr *arpHdr = ethPacket->arpHdr_;
@@ -426,7 +405,7 @@ void NetBlock::load(Json::Value &json)
     json["sendSleepTime"] >> sendSleepTime_;
     json["nbUpdateTime"] >> nbUpdateTime_;
     json["infectSleepTime"] >> infectSleepTime_;
-    device_ << json["NBPcapDevice"];
+    json["intfName"] >> device_.intfName_;
     lhm_ << json["LiveHostMgr"];
 }
 
@@ -435,6 +414,7 @@ void NetBlock::save(Json::Value &json)
     json["sendSleepTime"] << sendSleepTime_;
     json["nbUpdateTime"] << nbUpdateTime_;
     json["infectSleepTime"] << infectSleepTime_;
+    json["intfName"] << device_.intfName_;
     device_ >> json["NBPcapDevice"];
     lhm_ >> json["LiveHostMgr"];
 }

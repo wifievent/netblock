@@ -1,10 +1,12 @@
-#include "mainwindow.h"
 #include "weudpserver.h"
 #include "weudpclient.h"
 
-#include <GApp>
 
 #include <iostream>
+
+#include "netblock.h"
+
+#include <glog/logging.h>
 
 const char *version()
 {
@@ -20,36 +22,52 @@ const char *version()
 
 int main(int argc, char *argv[])
 {
-    GApp a(argc, argv);
-	qDebug() << "NetBlock Started" << version();
+    DLOG(INFO) << "NetBlock Started" << version();
 
     WEUdpClient client;
     if(client.searchProduct(7284, 1, 0, "run already?"))
     {
+        DLOG(ERROR) << "NetBlock stop tanks to using";
         qDebug() << "NetBlock stop thanks to using";
         return 0;
-    }
-    else
-    {
-        qInfo() << "NetBlock Started" << version();
     }
 
     WEUdpServer ws;
     ws.start(7284);
 
-    QIcon icon(":/image/logo/logo.ico");
-    a.setWindowIcon(icon);
+    DLOG(INFO) << "netblock";
+    NetBlock netblock;
+//    Json::Value jv;
+//    if(AppJson::loadFromFile("netblock.json", jv))
+//    {
+//        jv["NetBlock"] >> netblock;
+//        jv["NetBlock"] << netblock;
+//    }
 
-    MainWindow m;
-    if (!m.openCheck)
+    if(!netblock.open())
     {
-        qDebug() << QString("NB Do not open");
+        DLOG(ERROR) << "NB Do not open";
+        return 0;
     }
-    else
-    {
-        m.show();
-        a.exec();
+
+//    MainWindow m;
+//    if (!m.openCheck)
+//    {
+//        qDebug() << QString("NB Do not open");
+//    }
+//    else
+//    {
+//        m.show();
+//        a.exec();
+//    }
+
+    while(true) {
+
     }
+
+    netblock.close();
 
     ws.stop();
+
+    return 0;
 }

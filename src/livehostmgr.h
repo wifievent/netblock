@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QObject>
 #include "host.h"
 #include "fullscan.h"
 #include "oldhostmgr.h"
@@ -9,9 +10,10 @@
 
 
 struct StdLiveHostMgr : StateObj {
+
 public:
     StdLiveHostMgr(PcapDevice* pcapDevice): device_(pcapDevice) {};
-    ~StdLiveHostMgr() override;
+    ~StdLiveHostMgr() override {};
 
 protected:
     bool doOpen() override;
@@ -34,7 +36,6 @@ protected:
 public:
     void captured(Packet* packet);
 
-signals:
     void hostDetected(StdHost* host);
     void hostDeleted(StdHost* host);
 

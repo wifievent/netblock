@@ -1,8 +1,7 @@
-#ifndef WEUDPCLIENT_H
-#define WEUDPCLIENT_H
+#pragma once
 
-#include <GNetInfo>
-#include <GIp>
+#include "netinfo.h"
+#include "ip.h"
 
 #include "udpclient.h"
 #include <QDebug>
@@ -23,4 +22,3 @@ public:
     bool searchProduct(int port, int sec, int millisec, std::string protocol);
 };
 
-#endif // WEUDPCLIENT_H

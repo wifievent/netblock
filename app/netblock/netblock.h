@@ -1,5 +1,3 @@
-#include <GApp>
-#include <QtSql>
 #include "livehostmgr.h"
 
 #include <thread>
@@ -11,20 +9,7 @@
 
 #include "dbconnect.h"
 
-struct LockableSqlDatabase : QSqlDatabase {
-    QMutex m_;
-    static QSqlDatabase addDatabase(QSqlDriver* driver,
-                                    const QString& connectionName = QLatin1String(defaultConnection)) {
-        return QSqlDatabase::addDatabase(driver, connectionName);
-    }
-};
-
 struct NetBlock : StateObj {
-    Q_OBJECT
-    Q_PROPERTY(int sendSleepTime MEMBER sendSleepTime_)
-    Q_PROPERTY(int nbUpdateTime MEMBER nbUpdateTime_)
-    Q_PROPERTY(int infectSleepTime MEMBER infectSleepTime_)
-
     int sendSleepTime_{50}; // 50 msecs
     int nbUpdateTime_{60000}; // 1 minutes
     int infectSleepTime_{10000}; //  10 sec
@@ -32,8 +17,6 @@ struct NetBlock : StateObj {
 private:
     PcapDevice device_;
     Intf* intf_;
-
-    GWaitEvent we_;
     
     Mac gatewayMac_{Mac::nullMac()};
     Mac myMac_{Mac::nullMac()};
@@ -54,12 +37,6 @@ public:
 
     DBConnect* nbConnect_;
     DBConnect* ouiConnect_;
-
-    QMutex nbDBLock_;
-    QMutex ouiDBLock_;
-
-    QSqlDatabase nbDB_;
-    QSqlDatabase ouiDB_;
 
 public slots:
     void captured(Packet* packet);

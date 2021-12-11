@@ -1,10 +1,5 @@
 #pragma once
 
-#include <QMap>
-#include <GStateObj>
-#include <GThread>
-#include <GWaitEvent>
-
 #include <mutex>
 #include "host.h"
 #include "etharppacket.h"
@@ -40,7 +35,7 @@ public:
 
 public:
     StdOldHostMgr() {}
-    ~StdOldHostMgr() override;
+    ~StdOldHostMgr() override {}
 
 protected:
     bool doOpen() override;

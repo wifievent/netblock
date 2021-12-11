@@ -121,7 +121,7 @@ void StdLiveHostMgr::captured(Packet* packet) {
 
     if (hostName != "") {
         StdHost host(mac, ip, hostName);
-        emit hostDetected(&host);
+        hostDetected(&host);
     }
 
     StdHostMap::iterator newHost = hosts_.end();
@@ -139,7 +139,16 @@ void StdLiveHostMgr::captured(Packet* packet) {
         }
     }
     if (newHost != hosts_.end())
-        emit hostDetected(&newHost->second);
+        hostDetected(&newHost->second);
+}
+
+void StdLiveHostMgr::hostDetected(StdHost* host)
+{
+    DLOG(INFO) << "Detected" << host->defaultName();
+}
+void StdLiveHostMgr::hostDeleted(StdHost* host)
+{
+    DLOG(INFO) << "deleted" << host->defaultName();
 }
 
 void StdLiveHostMgr::load(Json::Value &json)
