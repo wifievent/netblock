@@ -34,12 +34,11 @@ public:
 
     void updateHosts();
 
-    StdLiveHostMgr lhm_{&device_};
-
     DBConnect* nbConnect_;
     DBConnect* ouiConnect_;
 
-public slots:
+    StdLiveHostMgr lhm_{&device_};
+
     void captured(Packet* packet);
     void block();
 

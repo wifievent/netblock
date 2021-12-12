@@ -1,13 +1,14 @@
 #pragma once
 
 #include <QObject>
-#include "host.h"
+#include "dinfo.h"
 #include "fullscan.h"
 #include "oldhostmgr.h"
 
 #include "arpspoof.h"
 #include "dhcphdr.h"
 
+#include "dbconnect.h"
 
 struct StdLiveHostMgr : StateObj {
 
@@ -27,6 +28,9 @@ public:
 
     Intf* intf_{nullptr};
     Mac myMac_{Mac::nullMac()};
+
+    DBConnect* nbConnect_;
+    DBConnect* ouiConnect_;
 
 protected:
     bool processDhcp(Packet* packet, Mac* mac, Ip* ip, std::string* hostName);

@@ -63,6 +63,7 @@ bool NetBlock::doOpen()
         DLOG(WARNING) << "ouiConnect return false";
         return false;
     }
+    lhm_.ouiConnect_ = ouiConnect_;
 
     nbConnect_ = new DBConnect(std::string("netblock.db"));
     if(!nbConnect_->open())
@@ -70,6 +71,7 @@ bool NetBlock::doOpen()
         DLOG(WARNING) << "nbConnect return false";
         return false;
     }
+    lhm_.nbConnect_ = nbConnect_;
     // Windows: FOLDERID_Profile
     //PWSTR path = NULL;
     //SHGetKnownFolderPath(FOLDERID_Profile, 0, NULL, &path); //User directory
