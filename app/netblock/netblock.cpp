@@ -34,84 +34,23 @@ bool NetBlock::dbCheck()
     return true;
 }
 
-void NetBlock::findGatewayMac()
-{
-    DLOG(INFO) << "Find gateway mac";
-    EthArpPacket packet;
-
-    EthHdr *ethHdr = &packet.ethHdr_;
-    ethHdr->dmac_ = Mac::broadcastMac();
-    ethHdr->smac_ = myMac_;
-    ethHdr->type_ = htons(EthHdr::Arp);
-
-    ArpHdr *arpHdr = &packet.arpHdr_;
-    arpHdr->hrd_ = htons(ArpHdr::ETHER);
-    arpHdr->pro_ = htons(EthHdr::Ip4);
-    arpHdr->hln_ = Mac::SIZE;
-    arpHdr->pln_ = Ip::SIZE;
-    arpHdr->op_ = htons(ArpHdr::Request);
-    arpHdr->smac_ = myMac_;
-    arpHdr->sip_ = myIp_;
-    arpHdr->tmac_ = Mac::nullMac();
-    arpHdr->tip_ = intf_->gateway_;
-
-    Packet::Result gatewayRes = device_.write(Buf(pbyte(&packet), sizeof(packet)));
-    if (gatewayRes != Packet::Ok)
-    {
-        DLOG(WARNING) << "device_->write return" << int(gatewayRes);
-    }
-
-    while(true)
-    {
-        Packet* readPacket;
-        Packet::Result res = device_.read(readPacket);
-        if (res == Packet::Eof) {
-            break;
-        } else
-        if (res == Packet::Fail) {
-            break;
-        } else
-        if (res == Packet::None) {
-            continue;
-        }
-
-        ArpHdr* arpHdr = readPacket->arpHdr_;
-
-        if(arpHdr == nullptr) continue;
-        if(arpHdr->op() != ArpHdr::Reply) continue;
-
-        Ip sIp = arpHdr->sip();
-        Mac sMac = arpHdr->smac();
-
-        if(intf_->gateway() == sIp) {
-            gatewayMac_ = sMac;
-            break;
-        }
-
-    }
-}
-
 bool NetBlock::doOpen()
 {
     DLOG(INFO) << "netblock open";
-    device_.intfName_ = std::string("wlan0");
+    DLOG(INFO) << device_.intfName_;
 	if (!device_.open())
     {
         DLOG(ERROR) << "device do not open";
         return false;
     }
-
-	if (!lhm_.open())
-	{
-        DLOG(WARNING) << "lhm.opoen() return false";
-		return false;
-	}
+    device_.prepare();
 
     intf_ = device_.intf();
     myMac_ = intf_->mac();
     myIp_ = intf_->ip();
+    gatewayMac_ = device_.gwMac_;
 
-    findGatewayMac();
+    DLOG(INFO) << "gateway mac:" << std::string(gatewayMac_).data();
     if(gatewayMac_ == Mac::nullMac()) {
         return false;
     }
@@ -140,6 +79,14 @@ bool NetBlock::doOpen()
         return false;
     }
 
+
+    if (!lhm_.open())
+    {
+        DLOG(WARNING) << "lhm.opoen() return false";
+        return false;
+    }
+
+    captureThread_ = new std::thread(&NetBlock::capture, this);
     dbUpdateThread_ = new std::thread(&NetBlock::dbUpdateRun, this);
     infectThread_ = new std::thread(&NetBlock::infectRun, this);
 
@@ -162,6 +109,11 @@ bool NetBlock::doClose()
     infectCv_.notify_all();
     dbUpdateThread_->join();
     infectThread_->join();
+    captureThread_->join();
+
+    delete dbUpdateThread_;
+    delete infectThread_;
+    delete captureThread_;
 
     ouiConnect_->close();
     nbConnect_->close();
@@ -173,14 +125,17 @@ bool NetBlock::doClose()
 }
 
 void NetBlock::capture() {
-    Packet* packet;
+    DLOG(INFO) << "NetBlock capture";
+    Packet packet;
     while(active())
     {
-        Packet::Result res = device_.read(packet);
+        Packet::Result res = device_.read(&packet);
+        DLOG(INFO) << "Packet result" << res;
         if(res == Packet::None) continue;
         if(res == Packet::Eof || res == Packet::Fail) break;
-        captured(packet);
-        lhm_.captured(packet);
+        DLOG(INFO) << "capture";
+        captured(&packet);
+        lhm_.captured(&packet);
     }
 }
 
@@ -201,6 +156,7 @@ void NetBlock::captured(Packet *packet)
 #endif
         return;
     }
+    DLOG(INFO) << "NetBlcok captured:" << std::string(ethHdr->dmac()).data();
     if (ethHdr->type() == EthHdr::Arp)
     {
 		// qDebug() << "Captured Arp Packet";
@@ -261,6 +217,10 @@ void NetBlock::updateHosts()
     /*updateDB*/
     std::list<DataList> dl = nbConnect_->selectQuery(std::string("SELECT * FROM block_host"));
 
+    if(dl.size() <= 0)
+    {
+        return;
+    }
     for(DataList dataList : dl)
     {
         StdHost host(Mac(dataList.argv_[0]), Ip(dataList.argv_[1]), dataList.argv_[2]);
@@ -299,7 +259,7 @@ void NetBlock::sendInfect(StdHost host)
     ArpHdr *arpHdr = &packet.arpHdr_;
     arpHdr->hrd_ = htons(ArpHdr::ETHER);
     arpHdr->pro_ = htons(EthHdr::Ip4);
-    arpHdr->hln_ = Mac::SIZE;
+    arpHdr->hln_ = Mac::SIZE;htonl(intf_->gateway());
     arpHdr->pln_ = Ip::SIZE;
     arpHdr->op_ = htons(ArpHdr::Reply);
     arpHdr->smac_ = myMac_;

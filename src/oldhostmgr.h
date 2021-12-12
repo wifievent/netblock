@@ -2,7 +2,6 @@
 
 #include <mutex>
 #include "host.h"
-#include "etharppacket.h"
 #include "appjson.h"
 #include "stateobj.h"
 

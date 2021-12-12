@@ -50,6 +50,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+
 //    MainWindow m;
 //    if (!m.openCheck)
 //    {
@@ -61,9 +62,9 @@ int main(int argc, char *argv[])
 //        a.exec();
 //    }
 
-    while(true) {
+    DLOG(INFO) << "nb open success";
 
-    }
+    sleep(600000);
 
     netblock.close();
 

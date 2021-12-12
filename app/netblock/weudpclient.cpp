@@ -1,5 +1,4 @@
 #include "weudpclient.h"
-#include <glog/logging.h>
 
 bool WEUdpClient::searchProduct(int port, int sec, int millisec, std::string protocol)
 {
@@ -12,11 +11,11 @@ bool WEUdpClient::searchProduct(int port, int sec, int millisec, std::string pro
     {
         if(strcmp(recvbuf_, "run already!") == 0)
         {
-            qDebug() << "There is already wifievent product running...";
+            DLOG(INFO) << "There is already wifievent product running...";
             return true;
         }
     }
-    qDebug() << "There is no wifievent product...";
+    DLOG(INFO) << "There is no wifevent product...";
     return false;
 }
 

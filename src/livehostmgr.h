@@ -5,14 +5,14 @@
 #include "fullscan.h"
 #include "oldhostmgr.h"
 
-#include "pcapdevice.h"
+#include "arpspoof.h"
 #include "dhcphdr.h"
 
 
 struct StdLiveHostMgr : StateObj {
 
 public:
-    StdLiveHostMgr(PcapDevice* pcapDevice): device_(pcapDevice) {};
+    StdLiveHostMgr(ArpSpoof* arpDevice): device_(arpDevice) {};
     ~StdLiveHostMgr() override {};
 
 protected:
@@ -21,7 +21,7 @@ protected:
 
 public:
     StdHostMap hosts_;
-    PcapDevice* device_{nullptr};
+    ArpSpoof* device_{nullptr};
     StdFullScan fs_;
     StdOldHostMgr ohm_;
 

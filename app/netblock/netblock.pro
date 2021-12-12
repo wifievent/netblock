@@ -30,7 +30,6 @@ RC_ICONS += logo.ico
 SOURCES += \
     ../../src/dbconnect.cpp \
     ../../src/sqlite/sqlite3.c \
-    ../../src/etharppacket.cpp \
     ../../src/fullscan.cpp \
     ../../src/host.cpp \
     ../../src/livehostmgr.cpp \
@@ -44,7 +43,6 @@ SOURCES += \
 HEADERS += \
     ../../src/dbconnect.h \
     ../../src/sqlite/sqlite3.h \
-    ../../src/etharppacket.h \
     ../../src/fullscan.h \
     ../../src/host.h \
     ../../src/livehostmgr.h \

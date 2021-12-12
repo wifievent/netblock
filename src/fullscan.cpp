@@ -1,5 +1,4 @@
 #include "fullscan.h"
-#include "etharppacket.h"
 
 #include <glog/logging.h>
 

@@ -6,6 +6,7 @@
 #include "appjson.h"
 #include "stateobj.h"
 #include "pcapdevice.h"
+#include "arpspoof.h"
 
 #include "dbconnect.h"
 
@@ -15,7 +16,7 @@ struct NetBlock : StateObj {
     int infectSleepTime_{10000}; //  10 sec
 
 private:
-    PcapDevice device_;
+    ArpSpoof device_;
     Intf* intf_;
     
     Mac gatewayMac_{Mac::nullMac()};
@@ -46,8 +47,6 @@ protected:
 	bool doOpen() override;
 	bool doClose() override;
 
-    void findGatewayMac();
-
     void sendInfect(StdHost host);
     void sendRecover(StdHost host);
 
@@ -57,8 +56,6 @@ protected:
     std::condition_variable blockCv_;
 
     std::thread* captureThread_;
-    std::mutex captureMutex_;
-    std::condition_variable captureCv_;
     void capture();
 
     std::thread* dbUpdateThread_;
