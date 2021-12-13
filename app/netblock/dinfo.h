@@ -15,7 +15,7 @@ struct StdDInfo : StdHost
     bool isConnect_{false};
 };
 
-struct StdDInfoList : std::list<StdDInfo>
+struct StdDInfoList : std::vector<StdDInfo>
 {
     std::mutex m_;
 };

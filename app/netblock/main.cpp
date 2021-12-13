@@ -1,6 +1,8 @@
 #include "weudpserver.h"
 #include "weudpclient.h"
+#include "mainwindow.h"
 
+#include <QApplication>
 
 #include <iostream>
 
@@ -22,6 +24,7 @@ const char *version()
 
 int main(int argc, char *argv[])
 {
+    QApplication a(argc, argv);
     DLOG(INFO) << "NetBlock Started" << version();
 
     WEUdpClient client;
@@ -35,6 +38,9 @@ int main(int argc, char *argv[])
     WEUdpServer ws;
     ws.start(7284);
 
+    MainWindow w;
+    w.show();
+    a.exec();
     DLOG(INFO) << "netblock";
     NetBlock netblock;
 //    Json::Value jv;
@@ -43,6 +49,8 @@ int main(int argc, char *argv[])
 //        jv["NetBlock"] >> netblock;
 //        jv["NetBlock"] << netblock;
 //    }
+
+    if(!w)
 
     if(!netblock.open())
     {

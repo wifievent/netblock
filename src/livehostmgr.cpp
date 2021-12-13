@@ -127,22 +127,26 @@ void StdLiveHostMgr::captured(Packet* packet) {
         hostDetected(&host);
     }
 
-    StdHostMap::iterator newHost = hosts_.end();
+    std::pair<StdHostMap::iterator, bool> newHost;
     {
         struct timeval now;
         gettimeofday(&now, NULL);
         std::lock_guard<std::mutex> lock(hosts_.m_);
         StdHostMap::iterator it = hosts_.find(mac);
+        DLOG(INFO) << "new mac: " << std::string(mac).data() << "bool: " << (it == hosts_.end()) << "host size: " << hosts_.size();
         if (it == hosts_.end()) {
             StdHost host(mac, ip, hostName);
             host.lastAccess_ = now.tv_sec;
-            hosts_.insert(std::pair<Mac, StdHost>(mac, host));
+            newHost = hosts_.insert(std::pair<Mac, StdHost>(mac, host));
         } else {
             it->second.lastAccess_ = now.tv_sec;
         }
     }
-    if (newHost != hosts_.end())
-        hostDetected(&newHost->second);
+
+    DLOG(INFO) << "newHost second" << newHost.second;
+
+    if (newHost.second)
+        hostDetected(&newHost.first->second);
 }
 
 void StdLiveHostMgr::hostDetected(StdHost* host)
@@ -151,7 +155,7 @@ void StdLiveHostMgr::hostDetected(StdHost* host)
     StdDInfo tmp(*host);
     tmp.isConnect_ = true;
 
-    std::string ouiQuery("SELECT organ FROM oui WHERE substr(mac, 1, 8) = substr(:mac, 1, 8)");
+    std::string ouiQuery("SELECT organ FROM oui WHERE substr(mac, 1, 8) = substr(':mac', 1, 8)");
     ouiQuery.replace(ouiQuery.find(":mac"), std::string(":mac").length(), std::string(tmp.mac_));
     std::list<DataList> dl = ouiConnect_->selectQuery(ouiQuery);
 
@@ -163,7 +167,7 @@ void StdLiveHostMgr::hostDetected(StdHost* host)
         }
     }
 
-    std::string query("INSERT INTO host(mac, last_ip, host_name, nick_name, oui) VALUES(:mac, :last_ip, :host_name, :nick_name, :oui)");
+    std::string query("INSERT INTO host(mac, last_ip, host_name, nick_name, oui) VALUES(':mac', ':last_ip', ':host_name', ':nick_name', ':oui')");
     query.replace(query.find(":mac"), std::string(":mac").length(), std::string(tmp.mac_));
     query.replace(query.find(":last_ip"), std::string(":last_ip").length(), std::string(tmp.ip_));
     query.replace(query.find(":host_name"), std::string(":host_name").length(), tmp.hostName_);

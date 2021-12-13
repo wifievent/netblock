@@ -36,7 +36,10 @@ SOURCES += \
     ../../src/oldhostmgr.cpp \
     main.cpp \
     dinfo.cpp \
+    mainwindow.cpp \
     netblock.cpp \
+    policyconfig.cpp \
+    policyobj.cpp \
     weudpclient.cpp \
     weudpserver.cpp
 
@@ -48,11 +51,16 @@ HEADERS += \
     ../../src/livehostmgr.h \
     ../../src/oldhostmgr.h \
     dinfo.h \
+    mainwindow.h \
     netblock.h \
+    policyconfig.h \
+    policyobj.h \
     weudpclient.h \
     weudpserver.h
 
-FORMS +=
+FORMS += \
+    mainwindow.ui \
+    policyconfig.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
