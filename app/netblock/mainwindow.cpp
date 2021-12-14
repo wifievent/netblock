@@ -8,6 +8,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 {
     ui->setupUi(this);
 
+    connect(&nb_.lhm_, &StdLiveHostMgr::hostDetected, this, &MainWindow::processHostDetected, Qt::BlockingQueuedConnection);
+    connect(&nb_.lhm_, &StdLiveHostMgr::hostDeleted, this, &MainWindow::processHostDeleted, Qt::BlockingQueuedConnection);
+
     Json::Value jv;
     if(AppJson::loadFromFile("netblock.json", jv))
     {
@@ -35,11 +38,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::processHostDetected(StdHost *host)
 {
-    qDebug() << QString("%1 %2 %3 %4").arg(QString(host->mac_), QString(host->ip_), host->hostName_, host->nickName_);
-    DInfo tmp(*host);
+    StdDInfo tmp(*host);
     tmp.isConnect_ = true;
 
-    DInfoList::iterator iter;
+    StdDInfoList::iterator iter;
     for (iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter)
     {
         if (iter->mac_ == tmp.mac_)
@@ -48,80 +50,67 @@ void MainWindow::processHostDetected(StdHost *host)
         }
     }
 
-    QSqlQuery nbQuery(nb_.nbDB_);
     if (iter != dInfoList_.end())
     {
         iter->isConnect_ = true;
-        if (iter->hostName_.isNull() && !tmp.hostName_.isNull())
+        if (iter->hostName_.empty() && !tmp.hostName_.empty())
         {
             iter->hostName_ = tmp.hostName_;
-            QMutexLocker ml(&nb_.nbDBLock_);
-            nbQuery.prepare("UPDATE host SET host_name = :host_name WHERE host_id = :host_id");
-            nbQuery.bindValue(":host_name", iter->hostName_);
-            nbQuery.bindValue(":host_id", iter->hostId_);
-            nbQuery.exec();
+            std::string query("UPDATE host SET host_name = ':host_name' WHERE host_id = :host_id");
+            query.replace(query.find(":host_name"), std::string(":host_name").length(), iter->hostName_);
+            query.replace(query.find(":host_id"), std::string(":host_id").length(), std::to_string(iter->hostId_));
+            nb_.nbConnect_->sendQuery(query);
         }
-        if (iter->nickName_.isNull())
+        if (iter->nickName_.empty())
         {
             iter->nickName_ = iter->hostName_;
-            QMutexLocker ml(&nb_.nbDBLock_);
-            nbQuery.prepare("UPDATE host SET nick_name = :nick_name WHERE host_id = :host_id");
-            nbQuery.bindValue(":nick_name", iter->nickName_);
-            nbQuery.bindValue(":host_id", iter->hostId_);
-            nbQuery.exec();
+            std::string query("UPDATE host SET nick_name = ':nick_name' WHERE host_id = :host_id");
+            query.replace(query.find(":nick_name"), std::string(":nick_name").length(), iter->nickName_);
+            query.replace(query.find(":host_id"), std::string(":host_id").length(), std::to_string(iter->hostId_));
+            nb_.nbConnect_->sendQuery(query);
         }
         if (tmp.ip_ != iter->ip_)
         {
-            QMutexLocker ml(&nb_.nbDBLock_);
-            nbQuery.prepare("UPDATE host SET last_ip=:last_ip WHERE host_id = :host_id");
-            nbQuery.bindValue(":last_ip", QString(tmp.ip_));
-            nbQuery.bindValue(":host_id", iter->hostId_);
-            nbQuery.exec();
-            iter->ip_ = tmp.ip_;
+            std::string query("UPDATE host SET last_ip=':last_ip' WHERE host_id = :host_id");
+            query.replace(query.find(":last_ip"), std::string(":last_ip").length(), std::string(tmp.ip_));
+            query.replace(query.find(":host_id"), std::string(":host_id").length(), std::to_string(iter->hostId_));
+            nb_.nbConnect_->sendQuery(query);
         }
         setDevTableItem();
     }
     else
     {
-        QSqlQuery ouiQuery(nb_.ouiDB_);
+        std::string query("SELECT organ FROM oui WHERE substr(mac, 1, 8) = substr(':mac', 1, 8)");
+        query.replace(query.find(":mac"), std::string(":mac").length(), std::string(tmp.mac_));
+        std::list<DataList> dl = nb_.ouiConnect_->selectQuery(query);
 
+        if(dl.size() > 0)
         {
-            QMutexLocker ml(&nb_.ouiDBLock_);
-            ouiQuery.prepare("SELECT organ FROM oui WHERE substr(mac, 1, 8) = substr(:mac, 1, 8)");
-            ouiQuery.bindValue(":mac", QString(tmp.mac_));
-            ouiQuery.exec();
-
-            while (ouiQuery.next())
+            for(DataList data : dl)
             {
-                tmp.oui_ = ouiQuery.value(0).toString();
+                tmp.oui_ = data.argv_[0];
             }
         }
 
         tmp.nickName_ = tmp.hostName_;
 
-        {
-            QMutexLocker ml(&nb_.nbDBLock_);
-            nbQuery.prepare("INSERT INTO host(mac, last_ip, host_name, nick_name, oui) VALUES(:mac, :last_ip, :host_name, :nick_name, :oui)");
-            nbQuery.bindValue(":mac", QString(tmp.mac_));
-            nbQuery.bindValue(":last_ip", QString(tmp.ip_));
-            nbQuery.bindValue(":host_name", tmp.hostName_);
-            nbQuery.bindValue(":nick_name", tmp.nickName_);
-            nbQuery.bindValue(":oui", tmp.oui_);
-            nbQuery.exec();
-        }
+        query = "INSERT INTO host(mac, last_ip, host_name, nick_name, oui) VALUES(':mac', ':last_ip', ':host_name', ':nick_name', ':oui')";
+        query.replace(query.find(":mac"), std::string(":mac").length(), std::string(tmp.mac_));
+        query.replace(query.find(":last_ip"), std::string(":last_ip").length(), std::string(tmp.ip_));
+        query.replace(query.find(":host_name"), std::string(":host_name").length(), tmp.hostName_);
+        query.replace(query.find(":nick_name"), std::string(":nick_name").length(), tmp.nickName_);
+        query.replace(query.find(":oui"), std::string(":oui").length(), tmp.oui_);
+        nb_.nbConnect_->sendQuery(query);
 
-        {
-            QMutexLocker ml(&nb_.nbDBLock_);
-            nbQuery.prepare("SELECT host_id FROM host WHERE mac=:mac");
-            nbQuery.bindValue(":mac", QString(tmp.mac_));
-            nbQuery.exec();
+        query = "SELECT host_id FROM host WHERE mac=':mac'";
+        query.replace(query.find(":mac"), std::string(":mac").length(), std::string(tmp.mac_));
+        dl = nb_.nbConnect_->selectQuery(query);
+        DataList data = dl.front();
+        tmp.hostId_ = std::stoi(data.argv_[0]);
 
-            nbQuery.next();
-            tmp.hostId_ = nbQuery.value(0).toInt();
-        }
+        dInfoList_.push_back(tmp);
 
-        dInfoList_.append(tmp);
-        if (dInfoList_.length() <= 1)
+        if(dInfoList_.size() <= 1)
         {
             setDevTableWidget();
         }
@@ -133,11 +122,10 @@ void MainWindow::processHostDetected(StdHost *host)
     }
 }
 
-void MainWindow::processHostDeleted(Host *host)
+void MainWindow::processHostDeleted(StdHost *host)
 {
-    qDebug() << QString("%1 %2 %3 %4").arg(QString(host->mac_), QString(host->ip_), host->hostName_, host->nickName_);
-    DInfo tmp(*host);
-    for (DInfoList::iterator iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter)
+    StdDInfo tmp(*host);
+    for (StdDInfoList::iterator iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter)
     {
         if (tmp.mac_ == iter->mac_)
         {
@@ -516,12 +504,12 @@ void MainWindow::setPolicyTable()
 
 void MainWindow::load(Json::Value& jv)
 {
-    jo["rect"] >> GJson::rect(this);
-    jo["tableWidget"] >> GJson::columnSizes(ui->devTable);
+//    jo["rect"] >> GJson::rect(this);
+//    jo["tableWidget"] >> GJson::columnSizes(ui->devTable);
 }
 
 void MainWindow::save(Json::Value& jv)
 {
-    jo["rect"] << GJson::rect(this);
-    jo["tableWidget"] << GJson::columnSizes(ui->devTable);
+//    jo["rect"] << GJson::rect(this);
+//    jo["tableWidget"] << GJson::columnSizes(ui->devTable);
 }

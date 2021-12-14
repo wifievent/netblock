@@ -54,7 +54,7 @@ void StdActiveScanThread::run() {
         // qDebug() << QString("start=%1 now=%2 diff=%3").arg(start).arg(now).arg(now - start); // gilgil temp 2021.10.24
         if (start.tv_sec + ohm_->deleteTimeout_ < now.tv_sec) {
             DLOG(INFO) << "start=" << start.tv_sec << "now=" << now.tv_sec << "diff=" << now.tv_sec - start.tv_sec;
-            ohm_->lhm_->hostDeleted(host_);
+            emit ohm_->lhm_->hostDeleted(host_);
             std::lock_guard<std::mutex> lock(ohm_->lhm_->hosts_.m_);
             ohm_->lhm_->hosts_.erase(host_->mac_);
             break;

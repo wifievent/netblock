@@ -10,7 +10,10 @@
 
 #include "dbconnect.h"
 
+#include "mainwindow.h"
+
 struct StdLiveHostMgr : StateObj {
+    Q_OBJECT
 
 public:
     StdLiveHostMgr(ArpSpoof* arpDevice): device_(arpDevice) {};
@@ -40,6 +43,7 @@ protected:
 public:
     void captured(Packet* packet);
 
+signals:
     void hostDetected(StdHost* host);
     void hostDeleted(StdHost* host);
 

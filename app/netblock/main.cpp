@@ -39,10 +39,7 @@ int main(int argc, char *argv[])
     ws.start(7284);
 
     MainWindow w;
-    w.show();
-    a.exec();
     DLOG(INFO) << "netblock";
-    NetBlock netblock;
 //    Json::Value jv;
 //    if(AppJson::loadFromFile("netblock.json", jv))
 //    {
@@ -50,12 +47,14 @@ int main(int argc, char *argv[])
 //        jv["NetBlock"] << netblock;
 //    }
 
-    if(!w)
-
-    if(!netblock.open())
+    if(w.openCheck)
     {
-        DLOG(ERROR) << "NB Do not open";
-        return 0;
+        w.show();
+        a.exec();
+    }
+    else
+    {
+        DLOG(ERROR) << "NB don't open";
     }
 
 
@@ -69,12 +68,6 @@ int main(int argc, char *argv[])
 //        m.show();
 //        a.exec();
 //    }
-
-    DLOG(INFO) << "nb open success";
-
-    sleep(600000);
-
-    netblock.close();
 
     ws.stop();
 

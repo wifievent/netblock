@@ -123,6 +123,15 @@ void PolicyConfig::on_eMinBox_currentIndexChanged(int index)
     eTime_ = QTime(eTime_.hour(), ui->eMinBox->currentText().toInt());
 }
 
+template<typename ... Args>
+std::string format_string(const std::string& format, Args ... args)
+{
+size_t size = snprintf(nullptr, 0, format.c_str(), args ...) + 1;
+std::unique_ptr<char[]> buffer(new char[size]);
+snprintf(buffer.get(), size, format.c_str(), args ...);
+return std::string(buffer.get(), buffer.get() + size - 1);
+}
+
 void PolicyConfig::on_applyButton_clicked()
 {
     DLOG(INFO) << sTime_.hour() << sTime_.minute() << eTime_.hour() << eTime_.minute();
@@ -136,43 +145,36 @@ void PolicyConfig::on_applyButton_clicked()
         dayOfWeek_[5] = ui->dayOfTheWeekCheck_5->isChecked();
         dayOfWeek_[6] = ui->dayOfTheWeekCheck_6->isChecked();
 
-        std::string query("UPDATE policy SET start_time=:start_time, end_time=:end_time, day_of_the_week=:day_of_the_week WHERE policy_id=:policy_id");
-        query.replace(query.find(":start_time"), std::string(":start_time").length(), std::to_string(sTime_.hour()));
-
-
-        if (policyId_ && dayOfWeek_.count(true) == 1)
+        if(policyId_ && dayOfWeek_.count(true) == 1)
         {
-            QMutexLocker ml(m_);
-            query_->prepare("UPDATE policy SET start_time=:start_time, end_time=:end_time, day_of_the_week=:day_of_the_week WHERE policy_id=:policy_id");
-            query_->bindValue(":start_time", QString("%1%2").arg(sTime_.hour(), 2, 10, QLatin1Char('0')).arg(sTime_.minute(), 2, 10, QLatin1Char('0')));
-            query_->bindValue(":end_time", QString("%1%2").arg(eTime_.hour() < 0 ? 24 : eTime_.hour(), 2, 10, QLatin1Char('0')).arg(eTime_.minute() < 0 ? 0 : eTime_.minute(), 2, 10, QLatin1Char('0')));
-            query_->bindValue(":day_of_the_week", QString::number(dayOfWeek_.indexOf(true)));
-            query_->bindValue(":policy_id", policyId_);
-            query_->exec();
+            std::string query("UPDATE policy SET start_time=':start_time', end_time=':end_time', day_of_the_week=:day_of_the_week WHERE policy_id=:policy_id");
+            query.replace(query.find(":start_time"), std::string(":start_time").length(), (sTime_.hour() >= 10 ? std::to_string(sTime_.hour()) : std::to_string(0) + std::to_string(sTime_.hour())) + (sTime_.minute() >= 10 ? std::to_string(sTime_.minute()) : std::to_string(0) + std::to_string(sTime_.minute())));
+            query.replace(query.find(":end_time"), std::string(":end_time").length(), (eTime_.hour() < 0 ? std::to_string(24) : (eTime_.hour() >= 10 ? std::to_string(eTime_.hour()) : (std::to_string(0) + std::to_string(eTime_.hour())))) + (eTime_.minute() >= 10 ? std::to_string(eTime_.minute()) : (std::to_string(0) + std::to_string(eTime_.minute()))));
+            query.replace(query.find(":day_of_the_week"), std::string(":day_of_the_week").length(), std::to_string((dayOfWeek_.indexOf(true))));
+            query.replace(query.find(":policy_id"), std::string(":policy_id").length(), std::to_string(policyId_));
+            connect_->sendQuery(query);
         }
         else
         {
             if (policyId_)
             {
-                QMutexLocker ml(m_);
-                query_->prepare("DELETE FROM policy WHERE policy_id=:policy_id");
-                query_->bindValue(":policy_id", policyId_);
-                query_->exec();
+                std::string query("DELETE FROM policy WHERE policy_id=:policy_id");
+                query.replace(query.find(":policy_id"), std::string(":policy_id").length(), std::to_string(policyId_));
+                connect_->sendQuery(query);
             }
             for (int i = 0; i < 7; ++i)
             {
                 if (dayOfWeek_[i])
                 {
-                    QMutexLocker ml(m_);
-                    query_->prepare("INSERT INTO policy(host_id, start_time, end_time, day_of_the_week) VALUES(:host_id, :start_time, :end_time, :day_of_the_week)");
-                    query_->bindValue(":host_id", hostId_);
-                    query_->bindValue(":start_time", QString("%1%2").arg(sTime_.hour(), 2, 10, QLatin1Char('0')).arg(sTime_.minute(), 2, 10, QLatin1Char('0')));
-                    query_->bindValue(":end_time", QString("%1%2").arg(eTime_.hour() < 0 ? 24 : eTime_.hour(), 2, 10, QLatin1Char('0')).arg(eTime_.minute() < 0 ? 0 : eTime_.minute(), 2, 10, QLatin1Char('0')));
-                    query_->bindValue(":day_of_the_week", i);
-                    query_->exec();
+                    std::string query("INSERT INTO policy(host_id, start_time, end_time, day_of_the_week) VALUES(:host_id, ':start_time', ':end_time', :day_of_the_week)");
+                    query.replace(query.find(":host_id"), std::string(":host_id").length(), std::to_string(hostId_));
+                    query.replace(query.find(":start_time"), std::string(":start_time").length(), (sTime_.hour() >= 10 ? std::to_string(sTime_.hour()) : std::to_string(0) + std::to_string(sTime_.hour())) + (sTime_.minute() >= 10 ? std::to_string(sTime_.minute()) : std::to_string(0) + std::to_string(sTime_.minute())));
+                    query.replace(query.find(":end_time"), std::string(":end_time").length(), (eTime_.hour() < 0 ? std::to_string(24) : (eTime_.hour() >= 10 ? std::to_string(eTime_.hour()) : (std::to_string(0) + std::to_string(eTime_.hour())))) + (eTime_.minute() >= 10 ? std::to_string(eTime_.minute()) : (std::to_string(0) + std::to_string(eTime_.minute()))));
+                    query.replace(query.find(":day_of_the_week"), std::string(":day_of_the_week").length(), std::to_string(i));
                 }
             }
         }
+
         accept();
         close();
     }
@@ -188,12 +190,9 @@ void PolicyConfig::on_applyButton_clicked()
 
 void PolicyConfig::on_deleteButton_clicked()
 {
-    {
-        QMutexLocker ml(m_);
-        query_->prepare("DELETE FROM policy WHERE policy_id = :policy_id");
-        query_->bindValue(":policy_id", policyId_);
-        query_->exec();
-    }
+    std::string query("DELETE FROM policy WHERE policy_id = :policy_id");
+    query.replace(query.find(":policy_id"), std::string(":policy_id").length(), std::to_string(policyId_));
+    connect_->sendQuery(query);
 
     accept();
     close();
