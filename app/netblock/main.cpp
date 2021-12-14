@@ -1,6 +1,5 @@
 #include "weudpserver.h"
 #include "weudpclient.h"
-#include "mainwindow.h"
 
 #include <QApplication>
 
@@ -38,36 +37,15 @@ int main(int argc, char *argv[])
     WEUdpServer ws;
     ws.start(7284);
 
-    MainWindow w;
-    DLOG(INFO) << "netblock";
-//    Json::Value jv;
-//    if(AppJson::loadFromFile("netblock.json", jv))
-//    {
-//        jv["NetBlock"] >> netblock;
-//        jv["NetBlock"] << netblock;
-//    }
-
-    if(w.openCheck)
+    NetBlock nb;
+    if(nb.open())
     {
-        w.show();
-        a.exec();
+
     }
     else
     {
         DLOG(ERROR) << "NB don't open";
     }
-
-
-//    MainWindow m;
-//    if (!m.openCheck)
-//    {
-//        qDebug() << QString("NB Do not open");
-//    }
-//    else
-//    {
-//        m.show();
-//        a.exec();
-//    }
 
     ws.stop();
 

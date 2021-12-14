@@ -19,7 +19,6 @@ class MainWindow : public QMainWindow, Obj
 {
     Q_OBJECT
 
-    friend StdLiveHostMgr;
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QObject>
+
 #include <string>
 #include <map>
 #include <mutex>
@@ -8,6 +10,9 @@
 
 struct StdHost
 {
+    Q_OBJECT
+
+public:
     StdHost() {}
     StdHost(Mac mac, Ip ip) : mac_(mac), ip_(ip) {}
     StdHost(Mac mac, Ip ip, std::string hostName): mac_(mac), ip_(ip), hostName_(hostName) {}

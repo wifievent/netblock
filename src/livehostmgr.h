@@ -27,6 +27,8 @@ public:
     StdFullScan fs_;
     StdOldHostMgr ohm_;
 
+    StdDInfoList dInfoList_;
+
     Intf* intf_{nullptr};
     Mac myMac_{Mac::nullMac()};
 
@@ -40,10 +42,10 @@ protected:
 
 public:
     void captured(Packet* packet);
-
-signals:
     void hostDetected(StdHost* host);
     void hostDeleted(StdHost* host);
+
+    void setDevInfoFromDatabase();
 
 public:
     void load(Json::Value& json) override;

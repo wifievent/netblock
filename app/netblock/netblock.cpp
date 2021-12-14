@@ -36,6 +36,12 @@ bool NetBlock::dbCheck()
 
 bool NetBlock::doOpen()
 {
+    Json::Value jv;
+    if(AppJson::loadFromFile("netblock.json", jv))
+    {
+        jv["NetBlock"] >> *this;
+    }
+
     DLOG(INFO) << "netblock open";
     DLOG(INFO) << device_.intfName_;
 	if (!device_.open())
@@ -99,6 +105,11 @@ bool NetBlock::doOpen()
 
 bool NetBlock::doClose()
 {
+    Json::Value jv;
+    if(AppJson::loadFromFile("netblock.json", jv))
+    jv["NetBlock"] << *this;
+    AppJson::saveToFile("netblock.json", jv);
+
     for(StdHostMap::iterator iter = nbHosts_.begin(); iter != nbHosts_.end(); ++iter)
     {
         sendRecover(iter->second);

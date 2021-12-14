@@ -19,6 +19,8 @@ bool StdLiveHostMgr::doOpen()
     if (!ohm_.open())
         return false;
 
+    setDevInfoFromDatabase();
+
     return true;
 }
 
@@ -26,6 +28,27 @@ bool StdLiveHostMgr::doClose() {
     fs_.close();
     ohm_.close();
     return true;
+}
+
+void StdLiveHostMgr::setDevInfoFromDatabase()
+{
+    std::list<DataList> dl = nbConnect_->selectQuery("SELECT * FROM host ORDER BY last_ip");
+
+    if(dl.size() > 0)
+    {
+        for(DataList data: dl)
+        {
+            StdDInfo tmp;
+            tmp.hostId_ = std::stoi(data.argv_[0]);
+            tmp.mac_ = Mac(data.argv_[1]);
+            tmp.ip_ = Ip(data.argv_[2]);
+            tmp.hostName_ = data.argv_[3];
+            tmp.nickName_ = data.argv_[4];
+            tmp.oui_ = data.argv_[5];
+
+            dInfoList_.push_back(tmp);
+        }
+    }
 }
 
 bool StdLiveHostMgr::processDhcp(Packet* packet, Mac* mac, Ip* ip, std::string* hostName) {
@@ -153,37 +176,92 @@ void StdLiveHostMgr::captured(Packet* packet) {
         emit hostDetected(&newHost.first->second);
 }
 
-//void StdLiveHostMgr::hostDetected(StdHost* host)
-//{
-//    DLOG(INFO) << "Detected" << host->defaultName();
-//    StdDInfo tmp(*host);
-//    tmp.isConnect_ = true;
+void StdLiveHostMgr::hostDetected(StdHost* host)
+{
+    StdDInfo tmp(*host);
+    tmp.isConnect_ = true;
 
-//    std::string ouiQuery("SELECT organ FROM oui WHERE substr(mac, 1, 8) = substr(':mac', 1, 8)");
-//    ouiQuery.replace(ouiQuery.find(":mac"), std::string(":mac").length(), std::string(tmp.mac_));
-//    std::list<DataList> dl = ouiConnect_->selectQuery(ouiQuery);
+    StdDInfoList::iterator iter;
+    for (iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter)
+    {
+        if (iter->mac_ == tmp.mac_)
+        {
+            break;
+        }
+    }
 
-//    if(dl.size() > 0)
-//    {
-//        for(DataList data: dl)
-//        {
-//            tmp.oui_ = data.argv_[0];
-//        }
-//    }
+    if (iter != dInfoList_.end())
+    {
+        iter->isConnect_ = true;
+        if (iter->hostName_.empty() && !tmp.hostName_.empty())
+        {
+            iter->hostName_ = tmp.hostName_;
+            std::string query("UPDATE host SET host_name = ':host_name' WHERE host_id = :host_id");
+            query.replace(query.find(":host_name"), std::string(":host_name").length(), iter->hostName_);
+            query.replace(query.find(":host_id"), std::string(":host_id").length(), std::to_string(iter->hostId_));
+            nbConnect_->sendQuery(query);
+        }
+        if (iter->nickName_.empty())
+        {
+            iter->nickName_ = iter->hostName_;
+            std::string query("UPDATE host SET nick_name = ':nick_name' WHERE host_id = :host_id");
+            query.replace(query.find(":nick_name"), std::string(":nick_name").length(), iter->nickName_);
+            query.replace(query.find(":host_id"), std::string(":host_id").length(), std::to_string(iter->hostId_));
+            nbConnect_->sendQuery(query);
+        }
+        if (tmp.ip_ != iter->ip_)
+        {
+            std::string query("UPDATE host SET last_ip=':last_ip' WHERE host_id = :host_id");
+            query.replace(query.find(":last_ip"), std::string(":last_ip").length(), std::string(tmp.ip_));
+            query.replace(query.find(":host_id"), std::string(":host_id").length(), std::to_string(iter->hostId_));
+            nbConnect_->sendQuery(query);
+        }
+    }
+    else
+    {
+        std::string query("SELECT organ FROM oui WHERE substr(mac, 1, 8) = substr(':mac', 1, 8)");
+        query.replace(query.find(":mac"), std::string(":mac").length(), std::string(tmp.mac_));
+        std::list<DataList> dl = ouiConnect_->selectQuery(query);
 
-//    std::string query("INSERT INTO host(mac, last_ip, host_name, nick_name, oui) VALUES(':mac', ':last_ip', ':host_name', ':nick_name', ':oui')");
-//    query.replace(query.find(":mac"), std::string(":mac").length(), std::string(tmp.mac_));
-//    query.replace(query.find(":last_ip"), std::string(":last_ip").length(), std::string(tmp.ip_));
-//    query.replace(query.find(":host_name"), std::string(":host_name").length(), tmp.hostName_);
-//    query.replace(query.find(":nick_name"), std::string(":nick_name").length(), tmp.nickName_);
-//    query.replace(query.find(":oui"), std::string(":oui").length(), tmp.oui_);
-//    nbConnect_->sendQuery(query);
-//}
-//void StdLiveHostMgr::hostDeleted(StdHost* host)
-//{
+        if(dl.size() > 0)
+        {
+            for(DataList data : dl)
+            {
+                tmp.oui_ = data.argv_[0];
+            }
+        }
 
-//    DLOG(INFO) << "deleted" << host->defaultName();
-//}
+        tmp.nickName_ = tmp.hostName_;
+
+        query = "INSERT INTO host(mac, last_ip, host_name, nick_name, oui) VALUES(':mac', ':last_ip', ':host_name', ':nick_name', ':oui')";
+        query.replace(query.find(":mac"), std::string(":mac").length(), std::string(tmp.mac_));
+        query.replace(query.find(":last_ip"), std::string(":last_ip").length(), std::string(tmp.ip_));
+        query.replace(query.find(":host_name"), std::string(":host_name").length(), tmp.hostName_);
+        query.replace(query.find(":nick_name"), std::string(":nick_name").length(), tmp.nickName_);
+        query.replace(query.find(":oui"), std::string(":oui").length(), tmp.oui_);
+        nbConnect_->sendQuery(query);
+
+        query = "SELECT host_id FROM host WHERE mac=':mac'";
+        query.replace(query.find(":mac"), std::string(":mac").length(), std::string(tmp.mac_));
+        dl = nbConnect_->selectQuery(query);
+        DataList data = dl.front();
+        tmp.hostId_ = std::stoi(data.argv_[0]);
+
+        dInfoList_.push_back(tmp);
+    }
+}
+void StdLiveHostMgr::hostDeleted(StdHost* host)
+{
+    StdDInfo tmp(*host);
+    for (StdDInfoList::iterator iter = dInfoList_.begin(); iter != dInfoList_.end(); ++iter)
+    {
+        if (tmp.mac_ == iter->mac_)
+        {
+            iter->isConnect_ = false;
+            break;
+        }
+    }
+}
 
 void StdLiveHostMgr::load(Json::Value &json)
 {
