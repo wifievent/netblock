@@ -10,8 +10,6 @@
 
 #include "dbconnect.h"
 
-#include "mainwindow.h"
-
 struct StdLiveHostMgr : StateObj {
     Q_OBJECT
 
