@@ -10,7 +10,7 @@ void WEUIServer::handleClnt(TcpClientSocket *clntsock) {
 
     while((len = clntsock->recv(buffer, BUFSIZE)) != -1) {
         if(len == 0) {
-            spdlog::info("clntsock is shutdown");
+            DLOG(ERROR) << "Clntsock is shutdown";
             return;
         }
         uirequest_.resetData();
@@ -25,7 +25,7 @@ void WEUIServer::handleClnt(TcpClientSocket *clntsock) {
 void WEUIServer::setHttpResponse(std::string path) {
     uiresponse_.resetData();
     int size = 0;
-    spdlog::info("request path: {}", path);
+    DLOG(INFO) << "request path: " << path;
 
     if(path == "/") {
         size = getWebUIData("/index.html");
@@ -50,19 +50,33 @@ void WEUIServer::setHttpResponse(std::string path) {
     uiresponse_.setHTTPHeaderVector(&headervector);
     uiresponse_.setResponseBody(ui_);
     uiresponse_.makeResponse();
+    DLOG(INFO) << ui_;
 }
 
 int WEUIServer::getWebUIData(std::string path) {
-    spdlog::info("Get local data from\n{}", rootdir_+path);
-    std::ifstream fin(rootdir_+path);
+    DLOG(INFO) << "Get local data from: " << rootdir_ + path;
+
     int size = 0;
 
-    if(fin.is_open()){
-        fin.seekg(0, std::ios::end);
-        size = fin.tellg();
-        fin.seekg(0, std::ios::beg);
-        fin.read(ui_, size);
+    if(path == "/device")
+    {
+        std::string str("{NetBlock: {device_id: 1, policy_id: 1}}");
+        strncpy(ui_, str.data(), str.length());
+        size = str.length();
+
+    } else if(path == "/policy"){
+
+    } else{
+        std::ifstream fin(rootdir_+path);
+
+        if(fin.is_open()){
+            fin.seekg(0, std::ios::end);
+            size = fin.tellg();
+            fin.seekg(0, std::ios::beg);
+            fin.read(ui_, size);
+        }
     }
+
     return size;
 }
 

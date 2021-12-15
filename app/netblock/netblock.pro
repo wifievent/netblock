@@ -5,6 +5,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++11
 
+LIBS *= -lglog
+
 include(../../../g/g.pri)
 INCLUDEPATH *= ../../src
 DESTDIR = ../../bin

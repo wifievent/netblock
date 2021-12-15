@@ -136,6 +136,14 @@ int HTTPRequest::parseRequestPacket()
     {
         method_ = POST;
     }
+    else if(httpmethod == "PATCH")
+    {
+        method_ = PATCH;
+    }
+    else if(httpmethod == "DELETE")
+    {
+        method_ = DELETE;
+    }
     else
     {
         method_ = NOT_IMPLEMENTED;
