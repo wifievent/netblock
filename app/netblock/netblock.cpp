@@ -272,7 +272,7 @@ void NetBlock::sendInfect(StdHost host)
     ArpHdr *arpHdr = &packet.arpHdr_;
     arpHdr->hrd_ = htons(ArpHdr::ETHER);
     arpHdr->pro_ = htons(EthHdr::Ip4);
-    arpHdr->hln_ = Mac::SIZE;htonl(intf_->gateway());
+    arpHdr->hln_ = Mac::SIZE;
     arpHdr->pln_ = Ip::SIZE;
     arpHdr->op_ = htons(ArpHdr::Reply);
     arpHdr->smac_ = myMac_;

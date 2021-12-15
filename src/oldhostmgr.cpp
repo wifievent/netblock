@@ -98,6 +98,7 @@ void StdOldHostMgr::run()
             std::lock_guard<std::mutex> lock(lhm_->hosts_.m_);
             struct timeval now;
             gettimeofday(&now, NULL);
+            DLOG(INFO) << "timeval: " << now.tv_sec;
 
             for(StdHostMap::iterator iter = lhm_->hosts_.begin(); iter != lhm_->hosts_.end(); ++iter)
             {

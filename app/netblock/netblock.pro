@@ -29,6 +29,8 @@ RC_ICONS += logo.ico
 
 SOURCES += \
     ../../src/dbconnect.cpp \
+    ../../src/httprequest.cpp \
+    ../../src/httpresponse.cpp \
     ../../src/sqlite/sqlite3.c \
     ../../src/fullscan.cpp \
     ../../src/host.cpp \
@@ -41,10 +43,14 @@ SOURCES += \
     policyconfig.cpp \
     policyobj.cpp \
     weudpclient.cpp \
-    weudpserver.cpp
+    weudpserver.cpp \
+    weuiserver.cpp
 
 HEADERS += \
     ../../src/dbconnect.h \
+    ../../src/http.h \
+    ../../src/httprequest.h \
+    ../../src/httpresponse.h \
     ../../src/sqlite/sqlite3.h \
     ../../src/fullscan.h \
     ../../src/host.h \
@@ -56,7 +62,8 @@ HEADERS += \
     policyconfig.h \
     policyobj.h \
     weudpclient.h \
-    weudpserver.h
+    weudpserver.h \
+    weuiserver.h
 
 FORMS += \
     mainwindow.ui \

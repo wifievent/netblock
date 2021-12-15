@@ -22,6 +22,7 @@ bool DBConnect::close()
 //  db_select 함수
 std::list<DataList> DBConnect::selectQuery(std::string query)
 {
+    DLOG(INFO) << "query: " << query;
     /*
     query: SELECT 쿼리문
     return: Select 결과가 담긴 list<Data_List>
@@ -52,8 +53,10 @@ int DBConnect::callback(void* dl, int argc, char** argv, char** column) {
     DataList data;
     data.argc_ = argc;
     for(int i = 0; i < argc; ++i) {
-        data.argv_.push_back(argv[i]);
-        data.column_.push_back(column[i]);
+        DLOG(INFO) << "argc: " << argc;
+        DLOG(INFO) << "i: " << i;
+        data.argv_.push_back(std::string(argv[i]) + "\0");
+        data.column_.push_back(std::string(column[i]) + "\0");
     }
     //  결과를 저장
     std::list<DataList>* data_list = (std::list<DataList>*)dl;

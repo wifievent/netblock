@@ -10,8 +10,6 @@
 
 struct StdHost
 {
-    Q_OBJECT
-
 public:
     StdHost() {}
     StdHost(Mac mac, Ip ip) : mac_(mac), ip_(ip) {}

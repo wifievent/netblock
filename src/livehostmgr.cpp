@@ -151,7 +151,7 @@ void StdLiveHostMgr::captured(Packet* packet) {
 
     if (hostName != "") {
         StdHost host(mac, ip, hostName);
-        emit hostDetected(&host);
+        hostDetected(&host);
     }
 
     std::pair<StdHostMap::iterator, bool> newHost;
@@ -173,7 +173,7 @@ void StdLiveHostMgr::captured(Packet* packet) {
     DLOG(INFO) << "newHost second" << newHost.second;
 
     if (newHost.second)
-        emit hostDetected(&newHost.first->second);
+        hostDetected(&newHost.first->second);
 }
 
 void StdLiveHostMgr::hostDetected(StdHost* host)

@@ -1,5 +1,6 @@
 #include "weudpserver.h"
 #include "weudpclient.h"
+#include "weuiserver.h"
 
 #include <QApplication>
 
@@ -21,9 +22,8 @@ const char *version()
 #endif // _DEBUG
 }
 
-int main(int argc, char *argv[])
+int main()
 {
-    QApplication a(argc, argv);
     DLOG(INFO) << "NetBlock Started" << version();
 
     WEUdpClient client;
@@ -37,16 +37,30 @@ int main(int argc, char *argv[])
     WEUdpServer ws;
     ws.start(7284);
 
-    NetBlock nb;
-    if(nb.open())
-    {
 
+    WEUIServer wus;
+    wus.rootdir_ = "./test";
+    wus.start(80);
+
+    NetBlock netblock;
+    if(netblock.open())
+    {
+        DLOG(INFO) << "NetBlock open";
+
+        wus.pDInfoList_ = &netblock.lhm_.dInfoList_;
+        wus.nbConnect_ = netblock.nbConnect_;
+
+        while(true)
+        {
+            sleep(100000);
+        }
     }
     else
     {
-        DLOG(ERROR) << "NB don't open";
+        DLOG(ERROR) << "NetBlock don't open";
     }
 
+    wus.stop();
     ws.stop();
 
     return 0;

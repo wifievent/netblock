@@ -11,7 +11,6 @@
 #include "dbconnect.h"
 
 struct StdLiveHostMgr : StateObj {
-    Q_OBJECT
 
 public:
     StdLiveHostMgr(ArpSpoof* arpDevice): device_(arpDevice) {};
