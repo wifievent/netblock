@@ -42,7 +42,18 @@ void WEUIServer::setHttpResponse(std::string path) {
     std::vector<std::pair<std::string, std::string>> headervector;
     headervector.push_back(std::make_pair("Connection", "keep-alive"));
     headervector.push_back(std::make_pair("Content-Length", len.c_str()));
-    headervector.push_back(std::make_pair("Content-Type", "text/html"));
+    if(path.ends_with(".css"))
+    {
+        headervector.push_back(std::make_pair("Content-Type", "text/css;charset=UTF-8"));
+    }
+    else if(path.ends_with(".js"))
+    {
+        headervector.push_back(std::make_pair("Content-Type", "text/javascript;charset=UTF-8"));
+    }
+    else
+    {
+        headervector.push_back(std::make_pair("Content-Type", "text/html"));
+    }
     headervector.push_back(std::make_pair("Date", getDateTime()));
     headervector.push_back(std::make_pair("Keep-Alive", "timeout=5, max=100"));
     headervector.push_back(std::make_pair("Server", "WEUIServer"));

@@ -2,6 +2,7 @@
 
 #include <glog/logging.h>
 
+
 bool NetBlock::dbCheck()
 {
     DLOG(INFO) << "Start dbCheck Function";
@@ -70,6 +71,14 @@ bool NetBlock::doOpen()
         return false;
     }
     lhm_.ouiConnect_ = ouiConnect_;
+
+//    PWSTR path = NULL;
+    //SHGetKnownFolderPath(FOLDERID_Profile, 0, NULL, &path); //User directory
+#ifdef _WIN32
+    // Windows: FOLDERID_Profile
+#endif
+#ifdef __linux__
+#endif
 
     nbConnect_ = new DBConnect(std::string("netblock.db"));
     if(!nbConnect_->open())
@@ -160,7 +169,7 @@ void NetBlock::captured(Packet *packet)
     Mac smac = ethHdr->smac();
     if (smac == myMac_)
     {
-#ifdef Q_OS_WIN
+#ifdef _WIN32
         if (ethHdr->dmac() == myMac_)
         {
             packet->ethHdr_->dmac_ = gatewayMac_;

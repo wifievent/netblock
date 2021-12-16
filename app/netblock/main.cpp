@@ -39,7 +39,7 @@ int main()
 
 
     WEUIServer wus;
-    wus.rootdir_ = "./test";
+    wus.rootdir_ = "./nbui";
     wus.start(80);
 
     NetBlock netblock;
