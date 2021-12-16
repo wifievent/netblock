@@ -59,7 +59,7 @@ void WEUIServer::setHttpResponse(std::string path) {
     headervector.push_back(std::make_pair("Server", "WEUIServer"));
 
     uiresponse_.setProtocol(HTTP1_1);
-    uiresponse_.setStatusCode(200);
+    uiresponse_.setStatusCode(statusCode_);
     uiresponse_.setReasonPhrase();
     uiresponse_.setHTTPHeaderVector(&headervector);
     uiresponse_.setResponseBody(ui_);
@@ -77,9 +77,9 @@ int WEUIServer::getWebUIData(std::string path) {
         if(uirequest_.getMethod() == GET)
         {
             Json::Value jv;
-            if(pDInfoList_->size() > 0)
+            if(pLhm_->dInfoList_.size() > 0)
             {
-                for(StdDInfo dInfo : *pDInfoList_)
+                for(StdDInfo dInfo : pLhm_->dInfoList_)
                 {
                     Json::Value subJv;
                     subJv["host_id"] << dInfo.hostId_;
@@ -112,9 +112,18 @@ int WEUIServer::getWebUIData(std::string path) {
             query.replace(query.find(":nick_name"), std::string(":nick_name").length(), nickName);
             query.replace(query.find(":host_id"), std::string(":host_id").length(), hostId);
             int result = nbConnect_->sendQuery(query);
-            std::string data = result == 0 ? "success" : "fail";
-            strncpy(ui_, data.data(), data.length());
-            size = data.length();
+            if(result == 0)
+            {
+                for(int i = 0; i < (int)pLhm_->dInfoList_.size(); ++i)
+                {
+                    if(pLhm_->dInfoList_[i].hostId_ == std::stoi(hostId))
+                    {
+                        pLhm_->dInfoList_[i].nickName_ = nickName;
+                        break;
+                    }
+                }
+            }
+            statusCode_ = result == 0 ? 200 : 403;
         }
         else if(uirequest_.getMethod() == DELETE)
         {
@@ -128,9 +137,18 @@ int WEUIServer::getWebUIData(std::string path) {
             std::string query("DELETE FROM host WHERE host_id=:host_id");
             query.replace(query.find(":host_id"), std::string(":host_id").length(), hostId);
             int result = nbConnect_->sendQuery(query);
-            std::string data = result == 0 ? "success" : "fail";
-            strncpy(ui_, data.data(), data.length());
-            size = data.length();
+            if(result == 0)
+            {
+                for(int i = 0; i < (int)pLhm_->dInfoList_.size(); ++i)
+                {
+                    if(pLhm_->dInfoList_[i].hostId_ == std::stoi(hostId))
+                    {
+                        pLhm_->dInfoList_.erase(pLhm_->dInfoList_.begin() + i);
+                        break;
+                    }
+                }
+            }
+            statusCode_ = result == 0 ? 200 : 403;
         }
 
     } else if(path == "/policy"){
@@ -199,8 +217,7 @@ int WEUIServer::getWebUIData(std::string path) {
                 }
             }
 
-            std::string data = result == 0 ? "success" : "fail";
-            strncpy(ui_, data.data(), data.length());
+            statusCode_ = result == 0 ? 200 : 403;
         }
         else if(uirequest_.getMethod() == PATCH)
         {
@@ -223,8 +240,8 @@ int WEUIServer::getWebUIData(std::string path) {
             query.replace(query.find(":day_of_the_week"), std::string(":day_of_the_week").length(), dayOfWeek);
             query.replace(query.find(":policy_id"), std::string(":policy_id").length(), policyId);
             int result = nbConnect_->sendQuery(query);
-            std::string data = result == 0 ? "success" : "fail";
-            strncpy(ui_, data.data(), data.length());
+
+            statusCode_ = result == 0 ? 200 : 403;
         }
         else if(uirequest_.getMethod() == DELETE)
         {
@@ -238,8 +255,8 @@ int WEUIServer::getWebUIData(std::string path) {
             std::string query("DELETE FROM policy WHERE policy_id = :policy_id");
             query.replace(query.find(":policy_id"), std::string(":policy_id").length(), policyId);
             int result = nbConnect_->sendQuery(query);
-            std::string data = result == 0 ? "success" : "fail";
-            strncpy(ui_, data.data(), data.length());
+
+            statusCode_ = result == 0 ? 200 : 403;
         }
     } else if(path=="/page")
     {

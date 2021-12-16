@@ -3,7 +3,7 @@
 #include "httprequest.h"
 #include "httpresponse.h"
 
-#include "dinfo.h"
+#include "livehostmgr.h"
 #include "dbconnect.h"
 #include "appjson.h"
 
@@ -16,9 +16,10 @@ class WEUIServer : public TcpServer
     HTTPRequest uirequest_;
     HTTPResponse uiresponse_;
     char ui_[BUFSIZE];
+    int statusCode_ = 200;
 
 public:
-    StdDInfoList* pDInfoList_;
+    StdLiveHostMgr* pLhm_;
     DBConnect* nbConnect_;
     std::string rootdir_;
 
