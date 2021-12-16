@@ -77,9 +77,9 @@ int WEUIServer::getWebUIData(std::string path) {
         if(uirequest_.getMethod() == GET)
         {
             Json::Value jv;
-            if(pLhm_->dInfoList_.size() > 0)
+            if(pDInfoList_->size() > 0)
             {
-                for(StdDInfo dInfo : pLhm_->dInfoList_)
+                for(StdDInfo dInfo : *pDInfoList_)
                 {
                     Json::Value subJv;
                     subJv["host_id"] << dInfo.hostId_;
@@ -114,11 +114,11 @@ int WEUIServer::getWebUIData(std::string path) {
             int result = nbConnect_->sendQuery(query);
             if(result == 0)
             {
-                for(int i = 0; i < (int)pLhm_->dInfoList_.size(); ++i)
+                for(int i = 0; i < (int)pDInfoList_->size(); ++i)
                 {
-                    if(pLhm_->dInfoList_[i].hostId_ == std::stoi(hostId))
+                    if((*pDInfoList_)[i].hostId_ == std::stoi(hostId))
                     {
-                        pLhm_->dInfoList_[i].nickName_ = nickName;
+                        (*pDInfoList_)[i].nickName_ = nickName;
                         break;
                     }
                 }
@@ -139,11 +139,11 @@ int WEUIServer::getWebUIData(std::string path) {
             int result = nbConnect_->sendQuery(query);
             if(result == 0)
             {
-                for(int i = 0; i < (int)pLhm_->dInfoList_.size(); ++i)
+                for(int i = 0; i < (int)pDInfoList_->size(); ++i)
                 {
-                    if(pLhm_->dInfoList_[i].hostId_ == std::stoi(hostId))
+                    if((*pDInfoList_)[i].hostId_ == std::stoi(hostId))
                     {
-                        pLhm_->dInfoList_.erase(pLhm_->dInfoList_.begin() + i);
+                        pDInfoList_->erase(pDInfoList_->begin() + i);
                         break;
                     }
                 }

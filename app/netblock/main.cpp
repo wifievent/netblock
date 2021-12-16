@@ -47,7 +47,7 @@ int main()
     {
         DLOG(INFO) << "NetBlock open";
 
-        wus.pLhm_ = &netblock.lhm_;
+        wus.pDInfoList_ = &netblock.lhm_.dInfoList_;
         wus.nbConnect_ = netblock.nbConnect_;
 
         while(true)
