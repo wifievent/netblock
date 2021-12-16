@@ -100,7 +100,10 @@ int WEUIServer::getWebUIData(std::string path) {
             std::string query("UPDATE host SET nick_name=':nick_name' WHERE host_id=:host_id");
             query.replace(query.find(":nick_name"), std::string(":nick_name").length(), nickName);
             query.replace(query.find(":host_id"), std::string(":host_id").length(), hostId);
-            nbConnect_->sendQuery(query);
+            int result = nbConnect_->sendQuery(query);
+            std::string data = result == 0 ? "success" : "fail";
+            strncpy(ui_, data.data(), data.length());
+            size = data.length();
         }
         else if(uirequest_.getMethod() == DELETE)
         {
@@ -113,7 +116,10 @@ int WEUIServer::getWebUIData(std::string path) {
 
             std::string query("DELETE FROM host WHERE host_id=:host_id");
             query.replace(query.find(":host_id"), std::string(":host_id").length(), hostId);
-            nbConnect_->sendQuery(query);
+            int result = nbConnect_->sendQuery(query);
+            std::string data = result == 0 ? "success" : "fail";
+            strncpy(ui_, data.data(), data.length());
+            size = data.length();
         }
 
     } else if(path == "/policy"){
@@ -153,7 +159,7 @@ int WEUIServer::getWebUIData(std::string path) {
         }
         else if(uirequest_.getMethod() == POST)
         {
-
+            int result = 0;
             std::string body = uirequest_.getRequestBody();
             Json::Reader read;
             Json::Value jv;
@@ -175,8 +181,15 @@ int WEUIServer::getWebUIData(std::string path) {
                 query.replace(query.find(":start_time"), std::string(":start_time").length(), sTime);
                 query.replace(query.find(":end_time"), std::string(":end_time").length(), eTime);
                 query.replace(query.find(":day_of_the_week"), std::string(":day_of_the_week").length(), dayOfWeek);
-                nbConnect_->sendQuery(query);
+                result = nbConnect_->sendQuery(query);
+                if(result != 0)
+                {
+                    break;
+                }
             }
+
+            std::string data = result == 0 ? "success" : "fail";
+            strncpy(ui_, data.data(), data.length());
         }
         else if(uirequest_.getMethod() == PATCH)
         {
@@ -198,7 +211,9 @@ int WEUIServer::getWebUIData(std::string path) {
             query.replace(query.find(":end_time"), std::string(":end_time").length(), eTime);
             query.replace(query.find(":day_of_the_week"), std::string(":day_of_the_week").length(), dayOfWeek);
             query.replace(query.find(":policy_id"), std::string(":policy_id").length(), policyId);
-            nbConnect_->sendQuery(query);
+            int result = nbConnect_->sendQuery(query);
+            std::string data = result == 0 ? "success" : "fail";
+            strncpy(ui_, data.data(), data.length());
         }
         else if(uirequest_.getMethod() == DELETE)
         {
@@ -211,7 +226,9 @@ int WEUIServer::getWebUIData(std::string path) {
 
             std::string query("DELETE FROM policy WHERE policy_id = :policy_id");
             query.replace(query.find(":policy_id"), std::string(":policy_id").length(), policyId);
-            nbConnect_->sendQuery(query);
+            int result = nbConnect_->sendQuery(query);
+            std::string data = result == 0 ? "success" : "fail";
+            strncpy(ui_, data.data(), data.length());
         }
     } else if(path=="/page")
     {
