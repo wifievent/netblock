@@ -254,9 +254,9 @@ int WEUIServer::getWebUIData(std::string path) {
             query.replace(query.find(":host_id"), std::string(":host_id").length(), hostId);
             std::list<DataList> dl = nbConnect_->selectQuery(query);
 
+            Json::Value policyJv;
             if(dl.size() > 0)
             {
-                Json::Value policyJv;
                 for(DataList data : dl)
                 {
                     Json::Value subJv;
@@ -268,8 +268,10 @@ int WEUIServer::getWebUIData(std::string path) {
                     subJv["day_of_the_week"] << dayOfWeek;
                     policyJv.append(subJv);
                 }
-                jv.append(policyJv);
             }
+            jv.clear();
+
+            jv["policy"] = policyJv;
 
             std::string data = jv.toStyledString();
             strncpy(ui_, data.data(), data.length());
