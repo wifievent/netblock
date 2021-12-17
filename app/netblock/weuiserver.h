@@ -4,6 +4,7 @@
 #include "httpresponse.h"
 
 #include "dinfo.h"
+#include "netblock.h"
 #include "dbconnect.h"
 #include "appjson.h"
 
@@ -20,6 +21,7 @@ class WEUIServer : public TcpServer
 
 public:
     StdDInfoList* pDInfoList_;
+    NetBlock* pNetblock_;
     DBConnect* nbConnect_;
     std::string rootdir_;
 

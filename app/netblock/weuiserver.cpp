@@ -152,7 +152,96 @@ int WEUIServer::getWebUIData(std::string path) {
         }
 
     } else if(path == "/policy"){
-        if(uirequest_.getMethod() == GET)
+        if(uirequest_.getMethod() == POST)
+        {
+            int result = 0;
+            std::string body = uirequest_.getRequestBody();
+            Json::Reader read;
+            Json::Value jv;
+            read.parse(body, jv);
+            std::string hostId;
+            jv["host_id"] >> hostId;
+
+            for(Json::Value subJv : jv["policy"])
+            {
+                std::string sTime;
+                subJv["start_time"] >> sTime;
+                std::string eTime;
+                subJv["end_time"] >> eTime;
+                std::string dayOfWeek;
+                subJv["day_of_the_week"] >> dayOfWeek;
+
+                std::string query("INSERT INTO policy(host_id, start_time, end_time, day_of_the_week) VALUES(:host_id, ':start_time', ':end_time', :day_of_the_week)");
+                query.replace(query.find(":host_id"), std::string(":host_id").length(), hostId);
+                query.replace(query.find(":start_time"), std::string(":start_time").length(), sTime);
+                query.replace(query.find(":end_time"), std::string(":end_time").length(), eTime);
+                query.replace(query.find(":day_of_the_week"), std::string(":day_of_the_week").length(), dayOfWeek);
+                result = nbConnect_->sendQuery(query);
+                if(result != 0)
+                {
+                    break;
+                }
+            }
+
+            if(result == 0)
+            {
+                pNetblock_->updateHosts();
+                pNetblock_->block();
+            }
+
+            statusCode_ = result == 0 ? 200 : 403;
+        }
+        else if(uirequest_.getMethod() == PATCH)
+        {
+            std::string body = uirequest_.getRequestBody();
+            Json::Reader read;
+            Json::Value jv;
+            read.parse(body, jv);
+            std::string policyId;
+            std::string sTime;
+            std::string eTime;
+            std::string dayOfWeek;
+            jv["policy_id"] >> policyId;
+            jv["start_time"] >> sTime;
+            jv["end_time"] >> eTime;
+            jv["day_of_the_week"] >> dayOfWeek;
+
+            std::string query("UPDATE policy SET start_time=':start_time', end_time=':end_time', day_of_the_week=:day_of_the_week WHERE policy_id=:policy_id");
+            query.replace(query.find(":start_time"), std::string(":start_time").length(), sTime);
+            query.replace(query.find(":end_time"), std::string(":end_time").length(), eTime);
+            query.replace(query.find(":day_of_the_week"), std::string(":day_of_the_week").length(), dayOfWeek);
+            query.replace(query.find(":policy_id"), std::string(":policy_id").length(), policyId);
+            int result = nbConnect_->sendQuery(query);
+
+            if(result == 0)
+            {
+                pNetblock_->updateHosts();
+                pNetblock_->block();
+            }
+
+            statusCode_ = result == 0 ? 200 : 403;
+        }
+        else if(uirequest_.getMethod() == DELETE)
+        {
+            std::string body = uirequest_.getRequestBody();
+            Json::Reader read;
+            Json::Value jv;
+            read.parse(body, jv);
+            std::string policyId;
+            jv["policy_id"] >> policyId;
+
+            std::string query("DELETE FROM policy WHERE policy_id = :policy_id");
+            query.replace(query.find(":policy_id"), std::string(":policy_id").length(), policyId);
+            int result = nbConnect_->sendQuery(query);
+            if(result == 0)
+            {
+                pNetblock_->updateHosts();
+            }
+            statusCode_ = result == 0 ? 200 : 403;
+        }
+    } else if(path=="/getpolicy")
+    {
+        if(uirequest_.getMethod() == POST)
         {
             std::string body = uirequest_.getRequestBody();
             Json::Reader read;
@@ -186,100 +275,6 @@ int WEUIServer::getWebUIData(std::string path) {
             strncpy(ui_, data.data(), data.length());
             size = data.length();
         }
-        else if(uirequest_.getMethod() == POST)
-        {
-            int result = 0;
-            std::string body = uirequest_.getRequestBody();
-            Json::Reader read;
-            Json::Value jv;
-            read.parse(body, jv);
-            std::string hostId;
-            jv["host_id"] >> hostId;
-
-            for(Json::Value subJv : jv["policy"])
-            {
-                std::string sTime;
-                subJv["start_time"] >> sTime;
-                std::string eTime;
-                subJv["end_time"] >> eTime;
-                std::string dayOfWeek;
-                subJv["day_of_the_week"] >> dayOfWeek;
-
-                std::string query("INSERT INTO policy(host_id, start_time, end_time, day_of_the_week) VALUES(:host_id, ':start_time', ':end_time', :day_of_the_week)");
-                query.replace(query.find(":host_id"), std::string(":host_id").length(), hostId);
-                query.replace(query.find(":start_time"), std::string(":start_time").length(), sTime);
-                query.replace(query.find(":end_time"), std::string(":end_time").length(), eTime);
-                query.replace(query.find(":day_of_the_week"), std::string(":day_of_the_week").length(), dayOfWeek);
-                result = nbConnect_->sendQuery(query);
-                if(result != 0)
-                {
-                    break;
-                }
-            }
-
-            statusCode_ = result == 0 ? 200 : 403;
-        }
-        else if(uirequest_.getMethod() == PATCH)
-        {
-            std::string body = uirequest_.getRequestBody();
-            Json::Reader read;
-            Json::Value jv;
-            read.parse(body, jv);
-            std::string policyId;
-            std::string sTime;
-            std::string eTime;
-            std::string dayOfWeek;
-            jv["policy_id"] >> policyId;
-            jv["start_time"] >> sTime;
-            jv["end_time"] >> eTime;
-            jv["day_of_the_week"] >> dayOfWeek;
-
-            std::string query("UPDATE policy SET start_time=':start_time', end_time=':end_time', day_of_the_week=:day_of_the_week WHERE policy_id=:policy_id");
-            query.replace(query.find(":start_time"), std::string(":start_time").length(), sTime);
-            query.replace(query.find(":end_time"), std::string(":end_time").length(), eTime);
-            query.replace(query.find(":day_of_the_week"), std::string(":day_of_the_week").length(), dayOfWeek);
-            query.replace(query.find(":policy_id"), std::string(":policy_id").length(), policyId);
-            int result = nbConnect_->sendQuery(query);
-
-            statusCode_ = result == 0 ? 200 : 403;
-        }
-        else if(uirequest_.getMethod() == DELETE)
-        {
-            std::string body = uirequest_.getRequestBody();
-            Json::Reader read;
-            Json::Value jv;
-            read.parse(body, jv);
-            std::string policyId;
-            jv["policy_id"] >> policyId;
-
-            std::string query("DELETE FROM policy WHERE policy_id = :policy_id");
-            query.replace(query.find(":policy_id"), std::string(":policy_id").length(), policyId);
-            int result = nbConnect_->sendQuery(query);
-
-            statusCode_ = result == 0 ? 200 : 403;
-        }
-    } else if(path=="/page")
-    {
-        std::string test_body("{\"host_id\": 1, \"policy\":[{\"start_time\": \"1300\", \"end_time\": \"1800\", \"day_of_the_week\": 1}, {\"start_time\": \"1300\", \"end_time\": \"1800\", \"day_of_the_week\": 2}]}");
-        Json::Reader read;
-        Json::Value jv;
-        read.parse(test_body, jv);
-        std::string hostId;
-        jv["host_id"] >> hostId;
-
-        std::string data = "";
-
-        for(Json::Value subJv : jv["policy"])
-        {
-            for(auto it = subJv.begin(); it != subJv.end(); ++it)
-            {
-                DLOG(INFO) << it->toStyledString();
-                data += it->toStyledString();
-            }
-        }
-
-        strncpy(ui_, data.data(), data.length());
-        size = data.length();
     } else{
         std::ifstream fin(rootdir_+path);
 
