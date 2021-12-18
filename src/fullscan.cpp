@@ -1,80 +1,86 @@
 #include "fullscan.h"
-#include "etharppacket.h"
 
-FullScan::FullScan(QObject* parent) : GStateObj(parent) {
+#include <glog/logging.h>
+
+bool StdFullScan::doOpen()
+{
+    if (device_ == nullptr) {
+        return false;
+    }
+
+    myThread_ = new std::thread(&StdFullScan::run, this);
+
+    return true;
 }
 
-FullScan::~FullScan() {
-	close();
+bool StdFullScan::doClose() {
+    myCv_.notify_all();
+    myThread_->join();
+    return true;
 }
 
-bool FullScan::doOpen() {
-	if (device_ == nullptr) {
-		SET_ERR(GErr::OBJECT_IS_NULL, "device_ is null");
-		return false;
-	}
+void StdFullScan::run() {
+    DLOG(INFO) << "fullscan";
 
-	thread_.start();
+    Intf* intf = device_->intf();
+    if (intf == nullptr) {
+        DLOG(ERROR) << "intf is null";
+        return;
+    }
 
-	return true;
+    Ip myIp = intf->ip();
+    Mac myMac = intf->mac();
+
+    Ip begIp = (myIp & intf->mask()) + 1;
+    Ip endIp = (myIp | ~intf->mask());
+
+    DLOG(INFO) << "begIp=" << std::string(begIp).data() << "endIp=" << std::string(endIp).data();
+
+    EthArpPacket packet;
+
+    EthHdr* ethHdr = &packet.ethHdr_;
+    ethHdr->dmac_ = Mac::broadcastMac();
+    ethHdr->smac_ = myMac;
+    ethHdr->type_ = htons(EthHdr::Arp);
+
+    ArpHdr* arpHdr = &packet.arpHdr_;
+    arpHdr->hrd_ = htons(ArpHdr::ETHER);
+    arpHdr->pro_ = htons(EthHdr::Ip4);
+    arpHdr->hln_ = Mac::SIZE;
+    arpHdr->pln_ = Ip::SIZE;
+    arpHdr->op_ = htons(ArpHdr::Request);
+    arpHdr->smac_ = myMac;
+    arpHdr->sip_ = htonl(myIp);
+    arpHdr->tmac_ = Mac::nullMac();
+
+    while (active()) {
+        for (Ip ip = begIp; ip <= endIp; ip = ip + 1) {
+            arpHdr->tip_ = htonl(ip);
+            Packet::Result res = device_->write(Buf(pbyte(&packet), sizeof(packet)));
+            if (res != Packet::Ok) {
+                DLOG(WARNING) << "device_->write return" << int(res);
+            }
+
+            std::unique_lock<std::mutex> lock(myMutex_);
+            if(myCv_.wait_for(lock,std::chrono::milliseconds(sendSleepTime_)) == std::cv_status::no_timeout) break;
+        }
+        if (!active()) break;
+
+        std::unique_lock<std::mutex> lock(myMutex_);
+        if(myCv_.wait_for(lock, std::chrono::milliseconds(rescanSleepTime_)) == std::cv_status::no_timeout) break;
+    }
+
+    DLOG(INFO) << "end";
 }
 
-bool FullScan::doClose() {
-	we_.wakeAll();
 
-	if (!thread_.wait() ) {
-		qCritical() << "thread_.wait return false";
-	}
-
-	return true;
+void StdFullScan::load(Json::Value& json)
+{
+    json["sendSleepTime"] >> sendSleepTime_;
+    json["rescanSleepTime"] >> rescanSleepTime_;
 }
-
-void FullScan::run() {
-	qDebug() << "beg";
-
-	GIntf* intf = device_->intf();
-	if (intf == nullptr) {
-		qCritical() << "intf is null";
-		return;
-	}
-
-	GIp myIp = intf->ip();
-	GMac myMac = intf->mac();
-
-	GIp begIp = (myIp & intf->mask()) + 1;
-	GIp endIp = (myIp | ~intf->mask());
-	qDebug() << QString("begIp=%1 endIp=%2").arg(QString(begIp), QString(endIp));
-
-	EthArpPacket packet;
-
-	GEthHdr* ethHdr = &packet.ethHdr_;
-	ethHdr->dmac_ = GMac::broadcastMac();
-	ethHdr->smac_ = myMac;
-	ethHdr->type_ = htons(GEthHdr::Arp);
-
-	GArpHdr* arpHdr = &packet.arpHdr_;
-	arpHdr->hrd_ = htons(GArpHdr::ETHER);
-	arpHdr->pro_ = htons(GEthHdr::Ip4);
-	arpHdr->hln_ = GMac::SIZE;
-	arpHdr->pln_ = GIp::SIZE;
-	arpHdr->op_ = htons(GArpHdr::Request);
-	arpHdr->smac_ = myMac;
-	arpHdr->sip_ = htonl(myIp);
-	arpHdr->tmac_ = GMac::nullMac();
-
-	GWaitEvent we;
-	while (active()) {
-		for (GIp ip = begIp; ip <= endIp; ip = ip + 1) {
-			arpHdr->tip_ = htonl(ip);
-			GPacket::Result res = device_->write(GBuf(pbyte(&packet), sizeof(packet)));
-			if (res != GPacket::Ok) {
-				qWarning() << QString("device_->write return %1 %2").arg(int(res)).arg(device_->err->msg());
-			}
-			if (we_.wait(sendSleepTime_)) break;
-		}
-		if (!active()) break;
-		if (we_.wait(rescanSleepTime_)) break;
-	}
-
-	qDebug() << "end";
+void StdFullScan::save(Json::Value& json)
+{
+    json["sendSleepTime"] << sendSleepTime_;
+    json["rescanSleepTime"] << rescanSleepTime_;
 }

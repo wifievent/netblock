@@ -1,86 +1,75 @@
-#include <GApp>
-#include <GJson>
-#include <GPcapDevice>
-#include <QtSql>
-#include <QMutexLocker>
-#include <QMutex>
+#pragma once
+
 #include "livehostmgr.h"
 
-struct LockableSqlDatabase : QSqlDatabase {
-    QMutex m_;
-    static QSqlDatabase addDatabase(QSqlDriver* driver,
-                                    const QString& connectionName = QLatin1String(defaultConnection)) {
-        return QSqlDatabase::addDatabase(driver, connectionName);
-    }
-};
+#include <thread>
+#include <mutex>
 
-struct NetBlock : GStateObj {
-    Q_OBJECT
-    Q_PROPERTY(int sendSleepTime MEMBER sendSleepTime_)
-    Q_PROPERTY(int nbUpdateTime MEMBER nbUpdateTime_)
-    Q_PROPERTY(int infectSleepTime MEMBER infectSleepTime_)
+#include "appjson.h"
+#include "stateobj.h"
+#include "pcapdevice.h"
+#include "arpspoof.h"
 
+#include "dbconnect.h"
+
+struct NetBlock : StateObj {
     int sendSleepTime_{50}; // 50 msecs
     int nbUpdateTime_{60000}; // 1 minutes
     int infectSleepTime_{10000}; //  10 sec
 
 private:
-	GPcapDevice device_;
-    GIntf* intf_;
-
-    GWaitEvent we_;
+    ArpSpoof device_;
+    Intf* intf_;
     
-    GMac gatewayMac_{GMac::nullMac()};
-    GMac myMac_{GMac::nullMac()};
-    GIp myIp_;
+    Mac gatewayMac_{Mac::nullMac()};
+    Mac myMac_{Mac::nullMac()};
+    Ip myIp_;
 
-    HostMap nbHosts_;
-    HostMap nbNewHosts_;
+    StdHostMap nbHosts_;
+    StdHostMap nbNewHosts_;
 
     bool dbCheck();
 
 public:
-    NetBlock(QObject* parent = nullptr);
-    ~NetBlock();
+    NetBlock() {};
+    ~NetBlock() { close(); };
 
     void updateHosts();
 
-	LiveHostMgr lhm_{this, &device_};
+    DBConnect* nbConnect_;
+    DBConnect* ouiConnect_;
 
-    QMutex nbDBLock_;
-    QMutex ouiDBLock_;
+    StdLiveHostMgr lhm_{&device_};
 
-    QSqlDatabase nbDB_;
-    QSqlDatabase ouiDB_;
-
-public slots:
-    void captured(GPacket* packet);
+    void captured(Packet* packet);
     void block();
 
 protected:
 	bool doOpen() override;
 	bool doClose() override;
 
-    void sendInfect(Host host);
-    void sendRecover(Host host);
+    void sendInfect(StdHost host);
+    void sendRecover(StdHost host);
 
     void run();
 
-    struct DBUpdateThread: GThread {
-        DBUpdateThread(QObject *parent) : GThread(parent) {}
-        ~DBUpdateThread() {}
-        GWaitEvent we_;
-        void run() override;
-    } dbUpdateThread_{this};
+    std::mutex blockMutex_;
+    std::condition_variable blockCv_;
 
-    struct InfectThread: GThread {
-        InfectThread(QObject *parent) : GThread(parent) {}
-        ~InfectThread() {}
-        GWaitEvent we_;
-        void run() override;
-    } infectThread_{this};
+    std::thread* captureThread_;
+    void capture();
+
+    std::thread* dbUpdateThread_;
+    std::mutex dbMutex_;
+    std::condition_variable dbCv_;
+    void dbUpdateRun();
+
+    std::thread* infectThread_;
+    std::mutex infectMutex_;
+    std::condition_variable infectCv_;
+    void infectRun();
 
 public:
-    void propLoad(QJsonObject jo) override;
-    void propSave(QJsonObject& jo) override;
+    void load(Json::Value& json) override;
+    void save(Json::Value& json) override;
 };

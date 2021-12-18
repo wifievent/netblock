@@ -1,62 +1,58 @@
 #pragma once
 
-#include <QMap>
-#include <GStateObj>
-#include <GThread>
-#include <GWaitEvent>
+#include <mutex>
 #include "host.h"
-#include "etharppacket.h"
+#include "appjson.h"
+#include "stateobj.h"
 
-struct OldHostMgr;
-struct ActiveScanThread : GThread {
-	ActiveScanThread(OldHostMgr* ohm, Host* host);
-	~ActiveScanThread() override;
-	void run() override;
+struct StdOldHostMgr;
+struct StdActiveScanThread : std::thread {
+    StdActiveScanThread(StdOldHostMgr* ohm, StdHost* host) : std::thread(&StdActiveScanThread::run, this), ohm_(ohm), host_(host) {}
+    ~StdActiveScanThread() {}
 
-	OldHostMgr* ohm_{nullptr};
-	Host* host_{nullptr};
-	GWaitEvent we_;
+    void run();
+
+    StdOldHostMgr* ohm_{nullptr};
+    StdHost* host_{nullptr};
+
+    std::mutex myMutex_;
+    std::condition_variable myCv_;
 };
 
-struct ActiveScanThreadMap: QMap<GMac, ActiveScanThread*> {
-	QMutex m_;
+struct StdActiveScanThreadMap: std::map<Mac, StdActiveScanThread*> {
+    std::mutex m_;
 };
 
-struct LiveHostMgr;
-struct OldHostMgr : GStateObj {
-	Q_OBJECT
-
-	Q_PROPERTY(int checkSleepTime MEMBER checkSleepTime_)
-	Q_PROPERTY(int scanStartTimeout MEMBER scanStartTimeout_)
-	Q_PROPERTY(int sendSleepTime MEMBER sendSleepTime_)
-	Q_PROPERTY(int deleteTimeout MEMBER deleteTimeout_)
+struct StdLiveHostMgr;
+struct StdOldHostMgr : StateObj
+{
+public:
+    int checkSleepTime_{10000}; // 10 secs
+    int scanStartTimeout_{60000}; // 60 secs
+    int sendSleepTime_{1000}; // 1 sec
+    int deleteTimeout_{10000}; // 10 secs
 
 public:
-	int checkSleepTime_{10000}; // 10 secs
-	int scanStartTimeout_{60000}; // 60 secs
-	int sendSleepTime_{1000}; // 1 sec
-	int deleteTimeout_{10000}; // 10 secs
-
-public:
-	OldHostMgr(QObject* parent = nullptr);
-	~OldHostMgr() override;
+    StdOldHostMgr() {}
+    ~StdOldHostMgr() override {}
 
 protected:
-	bool doOpen() override;
-	bool doClose() override;
+    bool doOpen() override;
+    bool doClose() override;
 
 public:
-	LiveHostMgr* lhm_{nullptr}; // reference
+    StdLiveHostMgr* lhm_{nullptr}; // reference
 
-	ActiveScanThreadMap astm_;
-	GWaitEvent we_;
+    StdActiveScanThreadMap astm_;
 
+    StdActiveScanThreadMap sastm_;
+
+    std::thread* myThread_;
+    std::mutex myMutex_;
+    std::condition_variable myCv_;
+
+    void load(Json::Value& json) override;
+    void save(Json::Value& json) override;
 protected:
-	void run();
-
-	struct MyThread: GThread {
-		MyThread(QObject *parent);
-		~MyThread();
-		void run() override;
-	} thread_{this};
+    void run();
 };

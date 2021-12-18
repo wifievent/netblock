@@ -1,9 +1,10 @@
 #include "host.h"
 
-QString Host::defaultName() {
-    if(!nickName_.isNull())
+std::string StdHost::defaultName()
+{
+    if(!nickName_.empty())
         return nickName_;
-    if(!hostName_.isNull())
+    if(!hostName_.empty())
         return hostName_;
-    return QString(ip_);
+    return std::string(ip_);
 }

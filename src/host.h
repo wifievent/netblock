@@ -1,22 +1,29 @@
 #pragma once
 
-#include <QHash>
-#include <GMac>
-#include <GIp>
+#include <QObject>
 
-struct Host {
-    Host() {};
-	Host(GMac mac, GIp ip) : mac_(mac), ip_(ip) {}
-	Host(GMac mac, GIp ip, QString hostName): mac_(mac), ip_(ip), hostName_(hostName) {}
+#include <string>
+#include <map>
+#include <mutex>
+#include "mac.h"
+#include "ip.h"
 
-	GMac mac_;
-	GIp ip_;
-	QString hostName_;
-	QString nickName_;
-	qint64 lastAccess_{0};
-    QString defaultName();
+struct StdHost
+{
+public:
+    StdHost() {}
+    StdHost(Mac mac, Ip ip) : mac_(mac), ip_(ip) {}
+    StdHost(Mac mac, Ip ip, std::string hostName): mac_(mac), ip_(ip), hostName_(hostName) {}
+
+    Mac mac_;
+    Ip ip_;
+    std::string hostName_;
+    std::string nickName_;
+    long lastAccess_{0};
+    std::string defaultName();
 };
 
-struct HostMap : QHash<GMac, Host> {
-	QMutex m_;
+struct StdHostMap : std::map<Mac, StdHost>
+{
+    std::mutex m_;
 };

@@ -3,12 +3,15 @@
 
 #include <QtCore>
 
+#include <string>
+#include <vector>
+
 class PolicyObj
 {
 protected:
     int policyId;
-    QString startTime;
-    QString endTime;
+    std::string startTime;
+    std::string endTime;
     int dayOfTheWeek;
     int hostId;
 
@@ -17,10 +20,10 @@ public:
     ~PolicyObj();
 
     void reset();
-    void set(QVector<QString> row);
+    void set(std::vector<std::string> row);
     int getPolicyId();
-    QString getStartTime();
-    QString getEndTime();
+    std::string getStartTime();
+    std::string getEndTime();
     int getDayOfTheWeek();
     int getHostId();
 };

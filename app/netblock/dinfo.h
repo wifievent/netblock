@@ -1,24 +1,21 @@
-#ifndef DINFO_H
-#define DINFO_H
+#pragma once
 
-#include <QString>
+#include <string>
+#include <mutex>
 #include "host.h"
 
-struct DInfo : Host
+struct StdDInfo : StdHost
 {
-    DInfo() {}
-    DInfo(const Host &host) : Host(host) {}
+    StdDInfo() {}
+    StdDInfo(const StdHost &host) : StdHost(host) {}
 
-    bool operator == (const DInfo& r) const { return hostId_ == r.hostId_ && mac_ == r.mac_; }
-
+    bool operator == (const StdDInfo& r) const { return hostId_ == r.hostId_ && mac_ == r.mac_; }
     int hostId_;
-    QString oui_;
-    bool isConnect_ = false;
+    std::string oui_;
+    bool isConnect_{false};
 };
 
-struct DInfoList : QList<DInfo>
+struct StdDInfoList : std::vector<StdDInfo>
 {
-    QMutex m_;
+    std::mutex m_;
 };
-
-#endif // DINFO_H

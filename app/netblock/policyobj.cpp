@@ -13,13 +13,13 @@ void PolicyObj::reset()
     hostId = 0;
 };
 
-void PolicyObj::set(QVector<QString> row)
+void PolicyObj::set(std::vector<std::string> row)
 {
-    policyId = row[0].toInt();
+    policyId = std::stoi(row[0]);
     startTime = row[1];
     endTime = row[2];
-    dayOfTheWeek = row[3].toInt();
-    hostId = row[4].toInt();
+    dayOfTheWeek = std::stoi(row[3]);
+    hostId = std::stoi(row[4]);
 }
 
 int PolicyObj::getPolicyId()
@@ -27,12 +27,12 @@ int PolicyObj::getPolicyId()
     return policyId;
 }
 
-QString PolicyObj::getStartTime()
+std::string PolicyObj::getStartTime()
 {
     return startTime;
 }
 
-QString PolicyObj::getEndTime()
+std::string PolicyObj::getEndTime()
 {
     return endTime;
 }

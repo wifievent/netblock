@@ -1,49 +1,52 @@
 #pragma once
 
-#include <QMutexLocker>
-#include <QMutex>
-#include <GJson>
-#include <GPcapDevice>
-#include <GStateObj>
-#include <GDhcpHdr>
-#include "host.h"
+#include <QObject>
+#include "dinfo.h"
 #include "fullscan.h"
 #include "oldhostmgr.h"
 
-struct G_EXPORT LiveHostMgr : GStateObj {
-    Q_OBJECT
+#include "arpspoof.h"
+#include "dhcphdr.h"
+
+#include "dbconnect.h"
+
+struct StdLiveHostMgr : StateObj {
 
 public:
-	LiveHostMgr(QObject* parent, GPcapDevice* pcapDevice);
-    ~LiveHostMgr() override;
+    StdLiveHostMgr(ArpSpoof* arpDevice): device_(arpDevice) {};
+    ~StdLiveHostMgr() override {};
 
 protected:
     bool doOpen() override;
     bool doClose() override;
 
 public:
-    HostMap hosts_;
-	GPcapDevice* device_{nullptr};
-    FullScan fs_;
-    OldHostMgr ohm_;
-    QElapsedTimer et_;
+    StdHostMap hosts_;
+    ArpSpoof* device_{nullptr};
+    StdFullScan fs_;
+    StdOldHostMgr ohm_;
 
-	GIntf* intf_{nullptr};
-    GMac myMac_{GMac::nullMac()};
+    StdDInfoList dInfoList_;
+
+    Intf* intf_{nullptr};
+    Mac myMac_{Mac::nullMac()};
+
+    DBConnect* nbConnect_;
+    DBConnect* ouiConnect_;
 
 protected:
-	bool processDhcp(GPacket* packet, GMac* mac, GIp* ip, QString* hostName);
-	bool processArp(GEthHdr* ethHdr, GArpHdr* arpHdr, GMac* mac, GIp* ip);
-	bool processIp(GEthHdr* ethHdr, GIpHdr* ipHdr, GMac* mac, GIp* ip);
-
-public slots:
-    void captured(GPacket* packet);
-
-signals:
-    void hostDetected(Host* host);
-    void hostDeleted(Host* host);
+    bool processDhcp(Packet* packet, Mac* mac, Ip* ip, std::string* hostName);
+    bool processArp(EthHdr* ethHdr, ArpHdr* arpHdr, Mac* mac, Ip* ip);
+    bool processIp(EthHdr* ethHdr, IpHdr* ipHdr, Mac* mac, Ip* ip);
 
 public:
-    void propLoad(QJsonObject jo) override;
-    void propSave(QJsonObject& jo) override;
+    void captured(Packet* packet);
+    void hostDetected(StdHost* host);
+    void hostDeleted(StdHost* host);
+
+    void setDevInfoFromDatabase();
+
+public:
+    void load(Json::Value& json) override;
+    void save(Json::Value& json) override;
 };

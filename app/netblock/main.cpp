@@ -1,8 +1,14 @@
-#include "mainwindow.h"
 #include "weudpserver.h"
 #include "weudpclient.h"
+#include "weuiserver.h"
 
-#include <GApp>
+#include <QApplication>
+
+#include <iostream>
+
+#include "netblock.h"
+
+#include <glog/logging.h>
 
 const char *version()
 {
@@ -16,38 +22,47 @@ const char *version()
 #endif // _DEBUG
 }
 
-int main(int argc, char *argv[])
+int main()
 {
-    GApp a(argc, argv);
-	qDebug() << "NetBlock Started" << version();
+    DLOG(INFO) << "NetBlock Started" << version();
 
     WEUdpClient client;
     if(client.searchProduct(7284, 1, 0, "run already?"))
     {
+        DLOG(ERROR) << "NetBlock stop tanks to using";
         qDebug() << "NetBlock stop thanks to using";
         return 0;
-    }
-    else
-    {
-        qInfo() << "NetBlock Started" << version();
     }
 
     WEUdpServer ws;
     ws.start(7284);
 
-    QIcon icon(":/image/logo/logo.ico");
-    a.setWindowIcon(icon);
 
-    MainWindow m;
-    if (!m.openCheck)
+    WEUIServer wus;
+    wus.rootdir_ = "./nbui";
+    wus.start(80);
+
+    NetBlock netblock;
+    if(netblock.open())
     {
-        qDebug() << QString("NB Do not open");
+        DLOG(INFO) << "NetBlock open";
+
+        wus.pDInfoList_ = &netblock.lhm_.dInfoList_;
+        wus.pNetblock_ = &netblock;
+        wus.nbConnect_ = netblock.nbConnect_;
+
+        while(true)
+        {
+            sleep(100000);
+        }
     }
     else
     {
-        m.show();
-        a.exec();
+        DLOG(ERROR) << "NetBlock don't open";
     }
 
+    wus.stop();
     ws.stop();
+
+    return 0;
 }

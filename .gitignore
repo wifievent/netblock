@@ -74,5 +74,7 @@ Thumbs.db
 bin/*
 !bin/oui.db
 !bin/manuf_rep.txt
+!bin/nbui
+
 
 build-*/

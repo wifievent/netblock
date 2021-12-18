@@ -3,11 +3,21 @@ QT       += sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11
+CONFIG += c++2a
 
-include(../../../g/g.pri)
+include(../../../opennet/opennet.pri)
 INCLUDEPATH *= ../../src
 DESTDIR = ../../bin
+
+LIBS *= -lglog
+
+LIBS *= -ldl
+
+
+LIBS *= -L$${PWD}/../../../opensocket/lib -lopensocket
+INCLUDEPATH *= $${PWD}/../../../opensocket/external
+INCLUDEPATH *= $${PWD}/../../../opensocket/src
+PRE_TARGETDEPS *= $${PWD}/../../../opensocket/lib/libopensocket.a
 
 RESOURCES += image.qrc
 
@@ -18,41 +28,42 @@ RC_ICONS += logo.ico
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    ../../src/etharppacket.cpp \
+    ../../src/dbconnect.cpp \
+    ../../src/httprequest.cpp \
+    ../../src/httpresponse.cpp \
+    ../../src/sqlite/sqlite3.c \
     ../../src/fullscan.cpp \
     ../../src/host.cpp \
     ../../src/livehostmgr.cpp \
     ../../src/oldhostmgr.cpp \
-    ../../src/socket.cpp \
-    ../../src/udpclient.cpp \
-    ../../src/udpserver.cpp \
-    ../../src/udpsocket.cpp \
     main.cpp \
-    mainwindow.cpp \
     dinfo.cpp \
+    mainwindow.cpp \
     netblock.cpp \
     policyconfig.cpp \
     policyobj.cpp \
     weudpclient.cpp \
-    weudpserver.cpp
+    weudpserver.cpp \
+    weuiserver.cpp
 
 HEADERS += \
-    ../../src/etharppacket.h \
+    ../../src/dbconnect.h \
+    ../../src/http.h \
+    ../../src/httprequest.h \
+    ../../src/httpresponse.h \
+    ../../src/sqlite/sqlite3.h \
     ../../src/fullscan.h \
     ../../src/host.h \
     ../../src/livehostmgr.h \
     ../../src/oldhostmgr.h \
-    ../../src/socket.h \
-    ../../src/udpclient.h \
-    ../../src/udpserver.h \
-    ../../src/udpsocket.h \
-    mainwindow.h \
     dinfo.h \
+    mainwindow.h \
     netblock.h \
     policyconfig.h \
     policyobj.h \
     weudpclient.h \
-    weudpserver.h
+    weudpserver.h \
+    weuiserver.h
 
 FORMS += \
     mainwindow.ui \

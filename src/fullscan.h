@@ -1,36 +1,34 @@
 #pragma once
 
-#include <GPcapDevice>
-#include <GWaitEvent>
+#include <thread>
+#include <mutex>
 
-struct G_EXPORT FullScan : GStateObj {
-	Q_OBJECT
-	Q_PROPERTY(int sendSleepTime MEMBER sendSleepTime_)
-	Q_PROPERTY(int rescanSleepTime MEMBER rescanSleepTime_)
+#include "appjson.h"
+#include "arpspoof.h"
 
-	int sendSleepTime_{50}; // 50 msecs
-    int rescanSleepTime_{600000}; // 10 minutes
+struct StdFullScan : StateObj
+{
+
+    int sendSleepTime_{50}; // 50 msecs
+    int rescanSleepTime_{6000}; // 10 minutes
 
 public:
-	FullScan(QObject* parent = nullptr);
-	~FullScan() override;
+    StdFullScan() {}
+    ~StdFullScan() {close();}
 
-	GPcapDevice* device_{nullptr}; // reference
-	GWaitEvent we_;
+    ArpSpoof* device_{nullptr}; // reference
 
-protected:
-	bool doOpen() override;
-	bool doClose() override;
+    void load(Json::Value& json) override;
+    void save(Json::Value& json) override;
 
 protected:
-	void run();
+    bool doOpen() override;
+    bool doClose() override;
 
-	struct MyThread: GThread {
-		MyThread(QObject *parent) : GThread(parent) {}
-		~MyThread() {}
-		void run() override {
-			FullScan* fullScan = dynamic_cast<FullScan*>(parent());
-			fullScan->run();
-		}
-	} thread_{this};
+protected:
+    void run();
+
+    std::thread* myThread_;
+    std::mutex myMutex_;
+    std::condition_variable myCv_;
 };
