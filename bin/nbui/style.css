@@ -1,0 +1,243 @@
+:root{
+	--body-background-color: #f5f6f7;
+	--font-color: #4e4e4e;
+	--border-gray-color : #dadada;
+	--we-blue-color: #0044ff;
+	--we-blue-border-color: #0066ff;
+	--we-red-color: #ff0000;
+	--we-red-border-color: #ff0077;
+}
+
+* {
+  font-family: "Montserrat", sans-serif;
+}
+
+html, body, #app {
+  height: 100vh;
+}
+
+body {
+	background:var(--body-background-color);
+}
+
+#app {
+  display: grid;
+  grid-template-rows: 1fr 8fr 1fr;
+  gap: 15px;
+}
+
+.menu-container {
+  padding: 50px 50px 0 50px;
+}
+
+button {
+  padding: 5px 15px 5px 15px;
+
+  color: white;
+}
+
+.blue-button {
+  border: solid 1px var(--we-blue-border-color);
+
+  background: var(--we-blue-color);
+}
+
+.red-button {
+  background: var(--we-red-color);
+
+	border: solid 1px var(--we-red-border-color);
+}
+
+.content {
+  display: grid;
+  grid-template-rows: 1fr auto;
+
+  padding: 0 50px 0 50px;
+}
+
+.device-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 50px;
+}
+
+.device-list-container {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 10px;
+}
+
+.title {
+  font-size: 20px;
+}
+
+.device-list {
+  border: 1px solid black;
+}
+
+.device-list-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 8fr 8fr;
+
+  border-bottom: 1px solid grey;
+}
+
+.device-list-row * {
+  padding: 5px;
+}
+
+.device-list-row *:not(:last-child) {
+  border-right: 1px solid grey;
+}
+
+.device-list-row.active * {
+  background-color: var(--font-color);
+  color: var(--body-background-color);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.device-info-container {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 10px;
+}
+
+.device-info-area {
+  border: 1px solid black;
+}
+
+.device-info-row {
+  display: grid;
+  grid-template-columns: 2fr 8fr;
+
+  padding: 20px;
+}
+
+.device-info-title {
+  display: grid;
+  align-items: center;
+}
+
+input {
+  border: solid 1px var(--border-gray-color);
+  padding: 5px 15px 5px 15px;
+	background: white;
+}
+
+.device-info-button-container {
+  display: grid;
+  justify-content: right;
+}
+
+.footer {
+	margin-top: 20px;
+}
+
+.footer p {
+	margin: 10px;
+}
+
+.policy-table-header {
+  display: grid;
+  grid-template-columns: auto repeat(7, 1fr);
+  grid-template-rows: auto;
+
+  border-width: 1px 0 0 1px;
+  border-style: solid;
+}
+
+.policy-table-header > div {
+  border-width: 0 1px 1px 0;
+  border-style: solid;
+
+  padding: 10px;
+
+  font-size: 18px;
+}
+
+.policy-table-container {
+  display: grid;
+  grid-template-columns: auto repeat(7, 1fr);
+  grid-template-rows: repeat(24, 1fr);
+
+  border-width: 1px 0 0 1px;
+  border-style: solid;
+
+  margin-bottom: 10px;
+
+  height: 60vh;
+  overflow-y: auto;
+}
+
+.policy-table-container::-webkit-scrollbar {
+  display: none;
+}
+
+.policy-table-container::-moz-scrollbar {
+  display: none;
+}
+
+.policy-table-container > div {
+  border-width: 0 1px 1px 0;
+  border-style: solid;
+
+  padding: 10px;
+
+  font-size: 18px;
+}
+
+.policy-menu-container {
+  display: grid;
+  grid-template-columns: 8fr 2fr;
+}
+
+.policy-button-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+#policy-config-container {
+  position: absolute;
+}
+
+#policy-config {
+  position: fixed;
+  left: calc(50% - 25vh); top: calc(50% - 10vh);
+
+  display: grid;
+  grid-template-rows: repeat(4, 1fr);
+
+  width: 50vh; height: 20vh;
+
+  padding: 10px;
+
+  border: 1px solid black;
+
+  background: white;
+}
+
+.config-day-box {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  align-content: space-around;
+  justify-items: center;
+}
+
+.config-time-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  align-content: space-around;
+  justify-items: center;
+}
+
+.config-button-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-content: space-around;
+  justify-items: center;
+  gap: 10px;
+}
